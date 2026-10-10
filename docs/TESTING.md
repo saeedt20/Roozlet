@@ -72,7 +72,8 @@ target GTK3. No system theme, panel, wallpaper or compositor was changed.
 | Idle CPU/memory | Measured separately below; long-running endurance not tested |
 | Wayland | Not tested; X11 is the release target |
 | Screen-reader session | Accessible labels checked; actual screen reader not tested |
-| lintian / debhelper alternative / GitHub CI execution | Not tested locally; tools/account not available |
+| lintian / debhelper alternative | Not tested locally; tools not available |
+| GitHub CI execution | Passed on Ubuntu 24.04; core/data checks, Xvfb GTK checks and package build |
 
 No scenario marked not tested is implied by unit or virtual-display tests.
 
@@ -81,7 +82,10 @@ checks**, including a real language-combo change applying immediately while Lati
 digits remain independently selected. Screenshot tests isolate the application
 PID and use exact client-window coordinates and IDs; unrelated windows are excluded.
 Source formatting and Ruff checks passed (vendored upstream source excluded).
-The CI workflow YAML files parse successfully; GitHub execution remains pending.
+The CI workflow YAML files parse successfully. The first published source commit
+passed [GitHub CI run 38085348396](https://github.com/saeedt20/Roozlet/actions/runs/38085348396)
+on Ubuntu 24.04, including logic/data checks, seven GTK checks under Xvfb, and the
+rootless package build. This supplements the native Mint validation above.
 
 ## Package reproducibility and resources
 
