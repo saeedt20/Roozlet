@@ -1,0 +1,25 @@
+name: Validate Roozlet
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  test-and-package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install native test dependencies
+        run: sudo apt-get update && sudo apt-get install -y python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 tzdata libfontconfig1 xvfb dbus-x11
+      - name: Logic and data
+        run: |
+          PYTHONPATH=src python3 -m unittest discover -s tests -v
+          python3 scripts/validate-data.py
+      - name: GTK smoke
+        run: xvfb-run -a ./scripts/test-gui.sh
+      - name: Build package
+        run: ./scripts/build-deb.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: rooz-debian-package
+          path: |
+            dist/*.deb
+            dist/SHA256SUMS

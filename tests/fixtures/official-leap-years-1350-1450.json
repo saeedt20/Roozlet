@@ -1,0 +1,415 @@
+{
+  "source": {
+    "id": "ut-leaps-1206-1498",
+    "url": "https://calendar.ut.ac.ir/documents/2139738/7092644/Kabise%2BShamsi%2B1206-1498.pdf/fbc45bf4-df46-c298-381c-2bff2c57f0e0?t=1719740029743",
+    "retrieved": "2026-10-10",
+    "sha256": "d897b960b46992226502a21e24c604db9f87cf68fa43f8df368316bee386475e"
+  },
+  "scope": "Leap star markings only. Printed Gregorian year-start dates in this long-range table conflict with the final 1405 annual calendar and are not adopted.",
+  "years": [
+    {
+      "jalali_year": 1350,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1351,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1352,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1353,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1354,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1355,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1356,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1357,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1358,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1359,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1360,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1361,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1362,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1363,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1364,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1365,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1366,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1367,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1368,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1369,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1370,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1371,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1372,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1373,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1374,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1375,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1376,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1377,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1378,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1379,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1380,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1381,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1382,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1383,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1384,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1385,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1386,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1387,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1388,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1389,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1390,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1391,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1392,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1393,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1394,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1395,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1396,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1397,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1398,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1399,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1400,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1401,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1402,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1403,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1404,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1405,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1406,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1407,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1408,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1409,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1410,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1411,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1412,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1413,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1414,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1415,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1416,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1417,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1418,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1419,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1420,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1421,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1422,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1423,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1424,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1425,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1426,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1427,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1428,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1429,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1430,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1431,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1432,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1433,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1434,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1435,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1436,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1437,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1438,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1439,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1440,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1441,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1442,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1443,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1444,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1445,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1446,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1447,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1448,
+      "is_leap": false
+    },
+    {
+      "jalali_year": 1449,
+      "is_leap": true
+    },
+    {
+      "jalali_year": 1450,
+      "is_leap": false
+    }
+  ]
+}

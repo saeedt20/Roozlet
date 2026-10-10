@@ -1,0 +1,30 @@
+[
+  {
+    "scale": "1",
+    "card_physical_size": [
+      320,
+      208
+    ],
+    "calendar_physical_size": [
+      560,
+      560
+    ],
+    "cwd": "/tmp",
+    "launcher": "extracted installed /usr/bin/rooz",
+    "status": "passed"
+  },
+  {
+    "scale": "2",
+    "card_physical_size": [
+      640,
+      416
+    ],
+    "calendar_physical_size": [
+      1120,
+      740
+    ],
+    "cwd": "/tmp",
+    "launcher": "extracted installed /usr/bin/rooz",
+    "status": "passed"
+  }
+]

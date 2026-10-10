@@ -1,0 +1,34 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Roozlet
+Source: https://github.com/saeedt20/Roozlet
+
+Files: *
+Copyright: 2026 Saeed Taheri
+License: MIT
+ See /usr/share/doc/rooz/LICENSE for the complete MIT license.
+
+Files: src/rooz/_vendor/jdatetime/*
+Copyright: 2010-2011 Milad Rastian
+License: PSF
+ See /usr/share/rooz/rooz/_vendor/jdatetime/LICENSE and the included
+ Python Software Foundation License text.
+
+Files: src/rooz/_vendor/jalali_core.py
+Copyright: 2001 Roozbeh Pournader, Mohammad Toossi
+ 2003-2011 Parspooyesh Fanavar
+License: LGPL-2.1+
+ See /usr/share/rooz/rooz/_vendor/jalali-core-LICENSE.
+ Complete unmodified library source is included in the package.
+
+Files: data/fonts/vazirmatn/*
+Copyright: 2015-2022 Saber Rastikerdar
+License: OFL-1.1
+ See /usr/share/rooz/rooz/data/fonts/vazirmatn/OFL.txt.
+
+Files: data/calendars/* tests/fixtures/official-1405-days.json
+Copyright: Annual calendar facts attributed to University of Tehran Calendar Center
+License: calendar-facts
+ Normalized calendar dates and occasion facts derived from the official
+ final 1405 calendar. No blanket license to the University website or PDF
+ is asserted. Original PDF is not redistributed in source or binary releases.
+ See docs/DATA_SOURCES.md and THIRD_PARTY_NOTICES.md.

@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv*/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+docs/sources/Calendar-1405.pdf
+*.deb
+*.buildinfo
+*.changes
+*.dsc
+*.tar.*
+debian/rooz/
+debian/.debhelper/
+debian/debhelper-build-stamp
+.ruff_cache/

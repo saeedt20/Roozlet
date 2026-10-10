@@ -1,0 +1,37 @@
+.TH ROOZ 1 "October 2026" "Rooz 0.1.0"
+.SH NAME
+rooz \- compact offline Persian calendar for Xfce
+.SH SYNOPSIS
+.B rooz
+[--widget | --calendar | --settings | --reset-position | --quit | --check-data | --version]
+.SH DESCRIPTION
+Rooz is a single-instance desktop date card. Double-click opens the month view.
+The default civil timezone is Asia/Tehran. Interface language and digits are independent.
+Official occasions and Iranian Hijri mapping are bundled for Solar Hijri year 1405 only.
+Other years show explicit missing-coverage messages.
+.SH OPTIONS
+.TP
+.B --widget
+Start or retain the compact card only. Intended for user login startup.
+.TP
+.B --calendar
+Open or raise the existing month window.
+.TP
+.B --settings
+Open bilingual preferences.
+.TP
+.B --reset-position
+Return the card to the primary monitor's upper-right work area.
+.TP
+.B --quit
+Gracefully quit the existing app.
+.TP
+.B --check-data
+Validate and report annual data without a graphical display.
+.TP
+.B --version
+Print the app version without a graphical display.
+.SH FILES
+XDG_CONFIG_HOME/rooz/config.json; XDG_DATA_HOME/rooz/calendars/; XDG_CONFIG_HOME/autostart/rooz.desktop
+.SH NOTES
+Login startup is opt-in. No network requests or privileged background service are used.

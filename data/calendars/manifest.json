@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "packages": [
+    {
+      "file": "1405.json",
+      "sha256": "27a33b4a1b33f09c61b80227353aafe2ebe330a2ba62f4274f3c4b9d2ea1765b",
+      "year": 1405,
+      "data_version": "1405.1"
+    }
+  ],
+  "sources": [
+    {
+      "id": "ut-calendar-1405",
+      "url": "https://calendar.ut.ac.ir/documents/2139738/7092644/Calendar-1405.pdf/64228cbb-f4de-dc32-4d2b-57db3c8e322f?t=1761972997587",
+      "revision": "Final; approvals through 1404-07-22",
+      "retrieved": "2026-10-10",
+      "sha256": "8e32b520d5da058414b9378d62a01117273336a4c074591f4e84d59ab32a963c"
+    }
+  ]
+}

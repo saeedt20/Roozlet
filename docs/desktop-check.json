@@ -1,0 +1,28 @@
+{
+  "session": "Mint 22.3 Xfce X11",
+  "checks": [
+    "default card 320 × 208",
+    "widget-only initial launch",
+    "native double-click opens month",
+    "compact card remains present",
+    "repeated double-click reuses calendar",
+    "CLI calendar reuses window",
+    "closing month preserves card",
+    "native gear opens settings only",
+    "Escape closes settings only",
+    "native right-click menu is dismissible",
+    "native header drag moves card",
+    "drag persists position",
+    "CLI reset restores default",
+    "managed desktop / below / sticky hints",
+    "card remains viewable during Show Desktop",
+    "relaunch opens existing calendar",
+    "single-instance quit completes",
+    "language/digits/theme persist after restart",
+    "native language change applies immediately",
+    "language leaves digit preference independent",
+    "start at login remains off"
+  ],
+  "status": "passed",
+  "count": 21
+}

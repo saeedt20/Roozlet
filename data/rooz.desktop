@@ -1,0 +1,27 @@
+[Desktop Entry]
+Type=Application
+Name=Rooz
+Name[fa]=روز
+GenericName=Persian Calendar
+GenericName[fa]=تقویم فارسی
+Comment=Offline Persian, Gregorian and Iranian Hijri calendar
+Comment[fa]=تقویم آفلاین شمسی، میلادی و قمری ایران
+Exec=rooz
+TryExec=rooz
+Icon=rooz
+Terminal=false
+Categories=Office;Calendar;
+Keywords=Persian;Jalali;Iran;Calendar;
+StartupNotify=false
+StartupWMClass=Rooz
+Actions=Calendar;Settings;
+
+[Desktop Action Calendar]
+Name=Open calendar
+Name[fa]=باز کردن تقویم
+Exec=rooz --calendar
+
+[Desktop Action Settings]
+Name=Settings
+Name[fa]=تنظیمات
+Exec=rooz --settings

@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Rooz annual calendar package",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "solar_year",
+    "data_version",
+    "coverage",
+    "sources",
+    "days",
+    "events"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "solar_year": {
+      "type": "integer",
+      "minimum": 1350,
+      "maximum": 1450
+    },
+    "data_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "coverage": {
+      "type": "object",
+      "required": [
+        "date_mapping",
+        "official_occasions",
+        "public_holidays"
+      ],
+      "properties": {
+        "date_mapping": {
+          "enum": [
+            "verified",
+            "partial",
+            "unavailable"
+          ]
+        },
+        "official_occasions": {
+          "enum": [
+            "verified",
+            "partial",
+            "unavailable"
+          ]
+        },
+        "public_holidays": {
+          "enum": [
+            "verified",
+            "partial",
+            "unavailable"
+          ]
+        }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "url"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    },
+    "days": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "gregorian_date",
+          "jalali_date",
+          "hijri_date"
+        ],
+        "properties": {
+          "gregorian_date": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          },
+          "jalali_date": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          },
+          "hijri_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "gregorian_date",
+          "title",
+          "categories",
+          "is_public_holiday",
+          "source_id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "gregorian_date": {
+            "type": "string",
+            "format": "date",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+          },
+          "title": {
+            "type": "object",
+            "required": [
+              "fa",
+              "en"
+            ],
+            "properties": {
+              "fa": {
+                "type": "string",
+                "minLength": 1
+              },
+              "en": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "categories": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "national",
+                "cultural",
+                "religious",
+                "international"
+              ]
+            }
+          },
+          "is_public_holiday": {
+            "type": "boolean"
+          },
+          "source_id": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

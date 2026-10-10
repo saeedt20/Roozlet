@@ -1,0 +1,11 @@
+{
+  "context": "Mint 22.3 Xfce X11; real widget only, default theme/font/scale, temporary XDG profile",
+  "duration_seconds": 60.01,
+  "cpu_seconds": 0.0,
+  "cpu_percent_one_core": 0.0,
+  "rss_start_kib": 66812,
+  "rss_end_kib": 66812,
+  "rss_min_kib": 66812,
+  "rss_max_kib": 66812,
+  "limitations": "One minute is not an endurance or overnight/resume test."
+}
