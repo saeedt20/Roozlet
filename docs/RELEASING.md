@@ -49,18 +49,12 @@ smoke check and the package build. GitHub action release versions were checked
 against their primary upstream release APIs during implementation. They are
 pinned to immutable commits. Virtual GTK CI does not certify Xfce behavior.
 
-The release workflow builds, tests and publishes Roozlet downloads when an
-authorized version change is merged into `main`, when a `v*` tag is pushed, or
-when it is manually dispatched. The release job has `contents: write` permission
-and uses GitHub's short-lived token for publishing; checkout does not persist it.
-All tests and artifact checks must pass before publication. New releases use a
-draft until all three assets are uploaded. Tags must match the source version.
-Version changes merged into `main` require release authorization because they
-publish automatically. The 0.1.1 publication was explicitly requested by the owner.
+The release-preparation workflow responds to `v*` tags and manual dispatch,
+uploading reviewed artifacts with read-only repository permissions. Publishing
+is a separate, explicitly authorized action.
 
 For an explicitly authorized release, build and verify the artifacts, commit the
-reviewed source, and wait for CI to pass. The workflow handles publication;
-the equivalent manual commands are:
+reviewed source, and wait for CI to pass. Then publish the tag and assets:
 
 ```sh
 git tag -a v0.1.1 -m "Roozlet 0.1.1"
