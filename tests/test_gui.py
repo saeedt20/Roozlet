@@ -88,7 +88,7 @@ class GuiTests(unittest.TestCase):
 
     def test_card_compact_font_and_gear(self):
         card = self.window(Card)
-        self.assertEqual((320, 208), tuple(card.get_size()))
+        self.assertEqual((320, 236), tuple(card.get_size()))
         self.assertEqual([], self.font_errors)
         f = PangoCairo.FontMap.get_default().create_context().load_font(Pango.FontDescription("Vazirmatn 12"))
         self.assertIn("Vazirmatn", f.describe().to_string())
@@ -145,7 +145,7 @@ class GuiTests(unittest.TestCase):
         self.app.cfg["digits"] = "latin"
         w.apply()
         s.apply()
-        self.assertEqual("Rooz · Calendar", w.get_title())
+        self.assertEqual("Roozlet · Calendar", w.get_title())
         self.assertEqual(Gtk.TextDirection.LTR, w.root.get_direction())
         self.assertEqual(date(2026, 10, 10), w.selected)
         self.assertIn("18 Mehr 1405", w.cells[self.app.today].get_accessible().get_name())
@@ -197,7 +197,7 @@ class GuiTests(unittest.TestCase):
             c.draw(c.canvas, cairo.Context(surface))
             surface.flush()
             pixels = bytes(surface.get_data())
-            target = tuple(round(v * 255) for v in rgb(tokens(self.app.cfg)["accent_text"]))
+            target = tuple(round(v * 255) for v in rgb(tokens(self.app.cfg, self.app.today)["fg"]))
             xs = []
             for y in range(10, 35):
                 for x in range(width):
@@ -287,6 +287,50 @@ class GuiTests(unittest.TestCase):
             self.assertEqual(MAX_YEAR, picker.year)
             self.assertFalse(picker.next_year.get_sensitive())
             w.dismiss_month_picker()
+
+    def test_centered_primary_survives_language_and_hidden_satellites(self):
+        from rooz.seasons import SEASONS
+        c = self.window(Card)
+        for language in ("fa", "en"):
+            for season in SEASONS:
+                for gregorian_visible, hijri_visible in ((True, True), (True, False), (False, True), (False, False)):
+                    self.app.cfg["language"] = language
+                    self.app.cfg["appearance"]["season"] = season
+                    self.app.cfg["calendar"].update(show_gregorian_column=gregorian_visible, show_hijri_column=hijri_visible)
+                    c.apply()
+                    c.fixed.check_resize()
+                    pump()
+                    x, width = c.date_slots()["shamsi"]
+                    self.assertEqual(160, x + width / 2)
+                    self.assertEqual(320, c.dimensions()[0])
+                    self.assertEqual(language == "fa", c.gear.get_allocation().x < 160)
+
+    def test_window_scoped_seasons_and_title_picker(self):
+        c = self.window(Card)
+        w = self.window(CalendarWindow)
+        self.app.cfg["appearance"]["calendar_follow_viewed_month"] = True
+        w.choose_month(1405, 1)
+        c.apply()
+        self.assertTrue(w.get_style_context().has_class("season-spring"))
+        self.assertTrue(c.get_style_context().has_class("season-autumn"))
+        w.title_button.clicked()
+        self.assertEqual(12, len(w.month_picker.month_buttons))
+        w.dismiss_month_picker()
+        w.show_view("occasions")
+        self.assertEqual("occasions", w.view)
+        w.select(self.app.today)
+        self.assertEqual("calendar", w.view)
+        self.assertEqual(self.app.today, w.selected)
+
+    def test_missing_scene_fallback_and_native_preview_controls(self):
+        from rooz.ui.artwork import image
+        self.assertIsNone(image("unknown", 100, 80))
+        s = self.window(Settings)
+        s.season_previews["winter"].clicked()
+        self.assertEqual("winter", self.app.cfg["appearance"]["season"])
+        self.assertEqual("seasonal", self.app.cfg["appearance"]["style"])
+        self.assertEqual(4, len(s.season_previews))
+        self.assertIn("روزلت", s.get_title())
 
 
 if __name__ == "__main__":

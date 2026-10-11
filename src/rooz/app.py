@@ -13,13 +13,13 @@ from .i18n import Localizer
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(prog="rooz", description="Rooz — Persian calendar for Xfce")
+    parser = argparse.ArgumentParser(prog="rooz", description="Roozlet — Persian calendar for Xfce")
     group = parser.add_mutually_exclusive_group()
     for command in ("widget", "calendar", "settings", "reset-position", "quit", "check-data", "version"):
         group.add_argument("--" + command, action="store_true")
     args = parser.parse_args(argv)
     if args.version:
-        print("Rooz " + __version__)
+        print("Roozlet " + __version__)
         return 0
     if args.check_data:
         try:
@@ -38,7 +38,7 @@ def main(argv=None):
             )
             return 1 if r.errors else 0
         except (OSError, ValueError, KeyError) as e:
-            print("Rooz: " + str(e), file=sys.stderr)
+            print("Roozlet: " + str(e), file=sys.stderr)
             return 1
     import gi
 
@@ -49,12 +49,12 @@ def main(argv=None):
 
     if not Gtk.init_check()[0]:
         print(
-            "Rooz needs a graphical display. Use --check-data or --version without a desktop.",
+            "Roozlet needs a graphical display. Use --check-data or --version without a desktop.",
             file=sys.stderr,
         )
         return 1
     GLib.set_prgname("rooz")
-    GLib.set_application_name("Rooz")
+    GLib.set_application_name("Roozlet")
     Gdk.set_program_class("Rooz")
     from . import fonts
     from .formatting import dates
@@ -90,7 +90,7 @@ def main(argv=None):
             Gtk.StyleContext.add_provider_for_screen(
                 Gdk.Screen.get_default(), self.provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
             )
-            theme.apply(self.cfg, self.provider)
+            theme.apply(self.cfg, self.provider, self.today)
             self.card = Card(self)
             self.timer = GLib.timeout_add_seconds(30, self.reconcile)
             self.initialized = True
@@ -147,7 +147,7 @@ def main(argv=None):
             self.clock.reconcile()
             self.today = self.clock.day
             self.refresh()
-            if self.settings and key in ("language", "digits", "font_mode", "custom_font_family"):
+            if self.settings and key in ("language", "digits", "font_mode", "custom_font_family", "style", "season", "accent_source"):
                 GLib.idle_add(self.rebuild_settings)
 
         def rebuild_settings(self):
@@ -156,11 +156,13 @@ def main(argv=None):
             return False
 
         def refresh(self):
-            theme.apply(self.cfg, self.provider)
+            theme.apply(self.cfg, self.provider, self.today)
             if self.card:
                 self.card.apply()
             if self.calendar:
                 self.calendar.apply()
+            if self.settings:
+                theme.style_window(self.settings, self.cfg, self.today)
 
         def reconcile(self):
             if self.clock.reconcile():

@@ -146,6 +146,30 @@ SHORT_WEEK = {
 }
 
 
+PAIRS.update({
+    'style': ('Appearance style', 'سبک ظاهر'),
+    'seasonal': ('Seasonal', 'فصلی'),
+    'classic': ('Classic', 'ساده'),
+    'season': ('Season', 'فصل'),
+    'auto': ('Automatic season', 'انتخاب خودکار فصل'),
+    'spring': ('Spring', 'بهار'),
+    'summer': ('Summer', 'تابستان'),
+    'autumn': ('Autumn', 'پاییز'),
+    'winter': ('Winter', 'زمستان'),
+    'accent_source': ('Accent source', 'رنگ تأکیدی'),
+    'custom_accent': ('Custom accent', 'رنگ دلخواه'),
+    'show_artwork': ('Scenic artwork', 'تصویر منظره'),
+    'artwork_intensity': ('Artwork intensity', 'شدت تصویر زمینه'),
+    'follow_month': ('Follow displayed month', 'ظاهر مطابق ماه نمایش\u200cداده\u200cشده'),
+    'follow_help': ('Only the calendar follows the browsed month in automatic seasonal mode.', 'فقط در حالت فصلی خودکار، ظاهر تقویم با ماه نمایش\u200cداده\u200cشده تغییر می\u200cکند.'),
+    'gregorian_column': ('Gregorian date in widget', 'نمایش تاریخ میلادی در ویجت'),
+    'calendar': ('Calendar', 'تقویم'),
+    'occasions': ('Occasions', 'مناسبت\u200cها'),
+    'about': ('About', 'درباره'),
+    'attribution': ('Artwork and data attribution', 'منابع تصاویر و تقویم'),
+    'copied': ('Date copied', 'تاریخ کپی شد'),
+})
+
 class Localizer:
     def __init__(self, cfg):
         self.cfg = cfg

@@ -20,9 +20,20 @@ def foreground(accent):
     return "#000000" if luminance(accent) > 0.179 else "#FFFFFF"
 
 
-def tokens(cfg):
+def tokens(cfg, today=None, viewed_month=None, season=None):
     t = dict(THEMES[cfg["appearance"]["theme"]])
-    t["accent"] = cfg["appearance"]["accent_color"]
+    from ..calendar_service import civil_day
+    from ..seasons import ACCENTS, effective_season
+
+    today = today or civil_day(cfg["timezone"])
+    t["season"] = season or effective_season(cfg, today, viewed_month)
+    a = cfg["appearance"]
+    t["seasonal"] = a.get("style") == "seasonal"
+    if t["seasonal"]:
+        t["bg"] = "#171D27" if a["theme"] == "dark" else "#F6F4F0"
+    t["accent"] = (ACCENTS[a["theme"]][t["season"]]
+                   if t["seasonal"] and a.get("accent_source") == "seasonal"
+                   else a["accent_color"])
     t["selected_fg"] = foreground(t["accent"])
     # Keep text accents readable while preserving the user's original selection fill.
     v = list(rgb(t["accent"]))
@@ -37,8 +48,8 @@ def tokens(cfg):
     return t
 
 
-def apply(cfg, provider):
-    t = tokens(cfg)
+def apply(cfg, provider, today=None):
+    t = tokens(cfg, today)
     f = family(cfg).replace('"', "")
     size = 11 * cfg["appearance"]["text_scale"]
     css = f'''
@@ -50,7 +61,7 @@ def apply(cfg, provider):
  .rooz button:hover {{ background-color: alpha({t["accent"]},0.12); }}
  .rooz button:focus {{ border-color: {t["accent_text"]}; }}
  .rooz button.day {{ padding: 1px; min-width: 30px; min-height: 32px; }}
- .rooz button.day .primary {{ font-size: {size * 1.45}px; font-weight: 500; }}
+ .rooz button.day .primary {{ font-size: {size * 1.75}px; font-weight: 500; }}
  .rooz button.selected {{ background-color: {t["accent"]}; }}
  .rooz button.selected label {{ color: {t["selected_fg"]}; }}
  .rooz button.today {{ border: 2px solid {t["accent_text"]}; }}
@@ -67,4 +78,40 @@ def apply(cfg, provider):
  window.rooz-card {{ background: transparent; }}
  .rooz-card button {{ background: transparent; border: none; box-shadow: none; padding: 0; min-width: 24px; min-height: 24px; }}
  '''
+    from ..seasons import SEASONS
+    # One bounded provider contains four scoped variants. A browsed season never
+    # changes another window's colors or accumulates providers on navigation.
+    variants = []
+    for season in SEASONS:
+        st = tokens(cfg, today, season=season)
+        variant = css
+        for key in ("bg", "fg", "muted", "line", "holiday", "accent", "accent_text", "selected_fg"):
+            variant = variant.replace(t[key], "__" + key + "__")
+        for key in ("bg", "fg", "muted", "line", "holiday", "accent", "accent_text", "selected_fg"):
+            variant = variant.replace("__" + key + "__", st[key])
+        variant = variant.replace(".rooz ", ".rooz.season-" + season + " ")
+        variant = variant.replace(".rooz {", ".rooz.season-" + season + " {")
+        variants.append(variant)
+    css += "\n" + "\n".join(variants)
+    css += """
+    .rooz button.day { border: 1px solid alpha(currentColor,0.10); border-radius: 8px; }
+    .rooz .sidebar { padding: 12px; background: alpha(currentColor,0.025); }
+    .rooz .sidebar button { padding: 10px 8px; font-size: 12px; }
+    .rooz button.month-title { font-size: 20px; font-weight: 600; }
+    .rooz .details-panel { padding: 14px; border-radius: 14px; }
+    .rooz-card button.occasion { font-size: 10.5px; padding: 0; }
+    """
+    for season in SEASONS:
+        st = tokens(cfg, today, season=season)
+        css += f"\n.rooz.season-{season} button.day.today {{ border: 2px solid {st['accent_text']}; }}"
     provider.load_from_data(css.encode())
+
+
+def style_window(widget, cfg, today, viewed_month=None):
+    from ..seasons import SEASONS, effective_season
+    context = widget.get_style_context()
+    for season in SEASONS:
+        context.remove_class("season-" + season)
+    season = effective_season(cfg, today, viewed_month)
+    context.add_class("season-" + season)
+    return season

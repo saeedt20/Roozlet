@@ -2,16 +2,19 @@ from gi.repository import Gdk, Gtk
 
 from .. import autostart
 from .common import button, clear, direction, label
+from .theme import style_window
+from .artwork import image
+from ..seasons import SEASONS, effective_season
 
 
 class Settings(Gtk.ApplicationWindow):
     def __init__(self, app):
-        super().__init__(application=app, title="Rooz")
+        super().__init__(application=app, title="Roozlet")
         self.app = app
         self.building = False
         monitor = self.get_display().get_primary_monitor() or self.get_display().get_monitor(0)
         area = monitor.get_workarea()
-        self.set_default_size(min(490, area.width - 48), min(500, area.height - 64))
+        self.set_default_size(min(540, area.width - 48), min(640, area.height - 64))
         self.set_size_request(360, 300)
         self.get_style_context().add_class("rooz")
         self.root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -35,7 +38,8 @@ class Settings(Gtk.ApplicationWindow):
         old_page = getattr(self, "notebook", None)
         old_page = old_page.get_current_page() if old_page else 0
         self.building = True
-        self.set_title(("روز" if loc.lang == "fa" else "Rooz") + " · " + loc.t("settings"))
+        style_window(self, cfg, self.app.today)
+        self.set_title(("روزلت" if loc.lang == "fa" else "Roozlet") + " · " + loc.t("settings"))
         self.set_direction(Gtk.TextDirection.RTL if loc.lang == "fa" else Gtk.TextDirection.LTR)
         clear(self.root)
         self.root.pack_start(label(loc.t("settings"), "heading"), False, False, 0)
@@ -81,6 +85,40 @@ class Settings(Gtk.ApplicationWindow):
             b.connect("notify::active", lambda b, _: self.change(section, field, b.get_active()))
             row(page, key, b)
 
+        combo("appearance", "style", "appearance", "style", [(v, loc.t(v)) for v in ("seasonal", "classic")])
+        combo("appearance", "season", "appearance", "season", [(v, loc.t(v)) for v in ("auto",) + SEASONS])
+        previews = Gtk.Grid()
+        previews.set_column_homogeneous(True)
+        previews.set_column_spacing(8)
+        previews.set_row_spacing(8)
+        self.season_previews = {}
+        for i, season in enumerate(SEASONS):
+            tile = Gtk.Button()
+            content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+            scene = image(season, 128, 68)
+            if scene:
+                content.pack_start(Gtk.Image.new_from_pixbuf(scene), False, False, 0)
+            content.pack_start(label(loc.t(season), align=.5), False, False, 0)
+            tile.add(content)
+            tile.get_accessible().set_name(loc.t(season))
+            tile.set_tooltip_text(loc.t(season))
+            if cfg["appearance"]["style"] == "seasonal" and season == effective_season(cfg, self.app.today):
+                tile.get_style_context().add_class("selected")
+            tile.connect("clicked", lambda _, v=season: self.choose_season(v))
+            previews.attach(tile, i % 2, i // 2, 1, 1)
+            self.season_previews[season] = tile
+        pages["appearance"].pack_start(previews, False, False, 0)
+        combo("appearance", "accent_source", "appearance", "accent_source", [
+            ("seasonal", loc.t("seasonal")), ("custom", loc.t("custom_accent"))])
+        toggle("appearance", "show_artwork", "appearance", "show_artwork")
+        spin("appearance", "artwork_intensity", "appearance", "artwork_intensity", 0, 1, .05)
+        follow = Gtk.Switch()
+        follow.set_active(cfg["appearance"]["calendar_follow_viewed_month"])
+        follow.set_sensitive(cfg["appearance"]["style"] == "seasonal" and cfg["appearance"]["season"] == "auto")
+        follow.set_tooltip_text(loc.t("follow_help"))
+        follow.connect("notify::active", lambda b, _: self.change("appearance", "calendar_follow_viewed_month", b.get_active()))
+        row("appearance", "follow_month", follow)
+        pages["appearance"].pack_start(label(loc.t("follow_help"), "muted", wrap=True), False, False, 0)
         combo("appearance", "theme", "appearance", "theme", [(v, loc.t(v)) for v in ("dark", "light")])
         color = Gtk.ColorButton()
         rgba = Gdk.RGBA()
@@ -122,7 +160,7 @@ class Settings(Gtk.ApplicationWindow):
         row("appearance", "custom", font)
         spin("appearance", "text_size", "appearance", "text_scale", 0.85, 1.4, 0.05)
         pages["appearance"].pack_start(
-            label("روزهای روشن؛ زندگی زیباست.\nRooz · 0123456789 · ۰۱۲۳۴۵۶۷۸۹", wrap=True), False, False, 0
+            label("روزهای روشن؛ زندگی زیباست.\nRoozlet · 0123456789 · ۰۱۲۳۴۵۶۷۸۹", wrap=True), False, False, 0
         )
         from ..fonts import family
 
@@ -160,6 +198,7 @@ class Settings(Gtk.ApplicationWindow):
         toggle("dates", "numerical_dates", "calendar", "prefer_numerical_dates")
         pages["dates"].pack_start(label(loc.t("numerical_help"), "muted", wrap=True), False, False, 0)
         toggle("dates", "gregorian_cells", "calendar", "show_gregorian_cell_numbers")
+        toggle("dates", "gregorian_column", "calendar", "show_gregorian_column")
         toggle("dates", "hijri_column", "calendar", "show_hijri_column")
         for category in ("national", "cultural", "religious", "international"):
             b = Gtk.CheckButton(label=loc.t(category))
@@ -200,6 +239,11 @@ class Settings(Gtk.ApplicationWindow):
         self.building = False
         if not was_visible:
             self.hide()
+
+    def choose_season(self, season):
+        self.change("appearance", "style", "seasonal")
+        self.change("appearance", "season", season)
+        self.apply()
 
     def filter(self, b, category):
         if self.building:

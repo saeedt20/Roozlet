@@ -10,12 +10,14 @@ from ..fonts import family
 from ..formatting import full_date
 from ..i18n import GMONTHS, HMONTHS, JMONTHS, WEEKDAYS
 from ..position import place
-from .theme import rgb, tokens
+from .theme import rgb, tokens, style_window
+from .artwork import paint
+from .icons import seasonal
 
 
 class Card(Gtk.ApplicationWindow):
     def __init__(self, app):
-        super().__init__(application=app, title="Rooz · Widget")
+        super().__init__(application=app, title="Roozlet · Widget")
         self.app = app
         self.drag_origin = None
         self.dragged = False
@@ -50,6 +52,10 @@ class Card(Gtk.ApplicationWindow):
         self.gear.set_image(Gtk.Image.new_from_icon_name("emblem-system-symbolic", Gtk.IconSize.MENU))
         self.gear.connect("clicked", lambda *_: self.app.open_settings())
         self.fixed.put(self.gear, 278, 10)
+        self.occasion = Gtk.Button()
+        self.occasion.get_style_context().add_class("occasion")
+        self.occasion.connect("clicked", lambda *_: self.show_today())
+        self.fixed.put(self.occasion, 16, 194)
         self.connect("delete-event", lambda *_: self.app.quit() or True)
         self.connect("destroy", self.cleanup)
         for name in ("monitors-changed", "size-changed"):
@@ -72,7 +78,7 @@ class Card(Gtk.ApplicationWindow):
             s = min(
                 s,
                 max(0.4, (area.width - 48) / 320),
-                max(0.4, (area.height - 48) / (208 * max(1, a["text_scale"]))),
+                max(0.4, (area.height - 48) / (236 * max(1, a["text_scale"]))),
             )
         return s
 
@@ -80,9 +86,36 @@ class Card(Gtk.ApplicationWindow):
         a = self.cfg["appearance"]
         s = self.layout_scale()
         ts = max(1, a["text_scale"])
-        return round(320 * s), round(208 * s * ts)
+        return round(320 * s), round(236 * s * ts)
+
+    def date_slots(self):
+        # Physical geometry never mirrors with UI language or hidden satellites.
+        return {"gregorian": (14, 88), "shamsi": (110, 100), "hijri": (218, 88)}
+
+    def summary(self):
+        repo, loc, day = self.app.repo, self.app.loc, self.app.today
+        events = repo.events(day)
+        visible = sorted(repo.visible(day, self.cfg["events"]), key=lambda e: not e["is_public_holiday"])
+        if visible:
+            value = loc.event_title(visible[0])
+            if visible[0]["is_public_holiday"]:
+                value = "◆ " + value
+            if len(visible) > 1:
+                value += " · " + loc.more(len(visible) - 1)
+            return value
+        if repo.errors and not repo.known(day):
+            return loc.t("unavailable")
+        return loc.t("filtered" if events else "none" if repo.known(day) else "incomplete")
+
+    def show_today(self):
+        self.app.open_calendar()
+        calendar = getattr(self.app, "calendar", None)
+        if calendar:
+            calendar.go_today()
 
     def apply(self):
+        style_window(self, self.cfg, self.app.today)
+        self.set_title("روزلت · ویجت" if self.app.loc.lang == "fa" else "Roozlet · Widget")
         w, h = self.dimensions()
         self.canvas.set_size_request(w, h)
         self.fixed.set_size_request(w, h)
@@ -90,6 +123,16 @@ class Card(Gtk.ApplicationWindow):
         s = self.layout_scale()
         gear_x = round(10 * s) if self.app.loc.lang == "fa" else w - round(40 * s)
         self.fixed.move(self.gear, gear_x, round(10 * s))
+        ts = max(1, self.cfg["appearance"]["text_scale"])
+        self.fixed.move(self.occasion, round(16*s), round(193*s*ts))
+        self.occasion.set_size_request(round(288*s), round(23*s*ts))
+        self.occasion.set_label(self.summary())
+        content = self.occasion.get_child()
+        content.set_ellipsize(Pango.EllipsizeMode.END)
+        content.set_max_width_chars(42)
+        self.occasion.set_tooltip_text("\n".join(self.app.loc.event_title(e) for e in
+                                      self.app.repo.visible(self.app.today, self.cfg["events"])) or self.summary())
+        self.occasion.get_accessible().set_name(self.summary() + " · " + self.app.loc.t("open"))
         self.gear.set_tooltip_text(self.app.loc.t("settings"))
         self.gear.get_accessible().set_name(self.app.loc.t("settings"))
         fg = Gdk.RGBA()
@@ -247,48 +290,60 @@ class Card(Gtk.ApplicationWindow):
     def draw(self, area, cr):
         w, h = self.dimensions()
         s = self.layout_scale()
-        t = tokens(self.cfg)
-        loc = self.app.loc
-        a = self.cfg["appearance"]
+        t = tokens(self.cfg, self.app.today)
+        loc, a = self.app.loc, self.cfg["appearance"]
         ts = a["text_scale"]
+        ys = max(1, ts)
         cr.set_operator(cairo.OPERATOR_SOURCE)
-        cr.set_source_rgba(0, 0, 0, 0) if self.get_screen().is_composited() else cr.set_source_rgb(
-            *rgb(t["bg"])
-        )
+        if self.get_screen().is_composited():
+            cr.set_source_rgba(0, 0, 0, 0)
+        else:
+            cr.set_source_rgb(*rgb(t["bg"]))
         cr.paint()
         cr.set_operator(cairo.OPERATOR_OVER)
+
+        def rounded(x, y, width, height, radius):
+            cr.new_sub_path()
+            for cx, cy, start in [(x+width-radius,y+radius,-math.pi/2),
+                                   (x+width-radius,y+height-radius,0),
+                                   (x+radius,y+height-radius,math.pi/2),
+                                   (x+radius,y+radius,math.pi)]:
+                cr.arc(cx, cy, radius, start, start+math.pi/2)
+            cr.close_path()
+
+        rounded(0, 0, w, h, 18*s)
+        cr.save()
+        cr.clip()
         opacity = a["background_opacity"] if self.get_screen().is_composited() else 1.0
-        radius = 17 * s
-        cr.new_sub_path()
-        for cx, cy, start in [
-            (w - radius, radius, -math.pi / 2),
-            (w - radius, h - radius, 0),
-            (radius, h - radius, math.pi / 2),
-            (radius, radius, math.pi),
-        ]:
-            cr.arc(cx, cy, radius, start, start + math.pi / 2)
-        cr.close_path()
         cr.set_source_rgba(*rgb(t["bg"]), opacity)
-        cr.fill_preserve()
-        cr.set_source_rgba(*rgb(t["line"]), 0.8)
+        cr.paint()
+        if t["seasonal"] and a["show_artwork"]:
+            paint(cr, t["season"], w, h, a["artwork_intensity"]*.58)
+            shade = cairo.LinearGradient(0, 0, 0, h)
+            shade.add_color_stop_rgba(0, *rgb(t["bg"]), .15)
+            shade.add_color_stop_rgba(.32, *rgb(t["bg"]), .75)
+            shade.add_color_stop_rgba(1, *rgb(t["bg"]), .96)
+            cr.set_source(shade)
+            cr.paint()
+        cr.restore()
+        rounded(.5, .5, w-1, h-1, 18*s)
+        cr.set_source_rgba(*rgb(t["muted"]), .35)
         cr.set_line_width(1)
         cr.stroke()
         cr.scale(s, s)
-        hh = h / s
 
         def text(value, x, y, width, size=11, color="fg", weight=400, align=Pango.Alignment.CENTER):
             layout = PangoCairo.create_layout(cr)
             desc = Pango.FontDescription()
             desc.set_family(family(self.cfg))
-            desc.set_absolute_size(size * ts * Pango.SCALE)
+            desc.set_absolute_size(size*ts*Pango.SCALE)
             desc.set_weight(weight)
             layout.set_font_description(desc)
-            # Edge alignment must not be flipped again by Pango's auto RTL handling.
             if align != Pango.Alignment.CENTER:
                 layout.set_auto_dir(False)
                 layout.get_context().set_base_dir(Pango.Direction.LTR)
             layout.set_text(str(value), -1)
-            layout.set_width(round(width * Pango.SCALE))
+            layout.set_width(round(width*Pango.SCALE))
             layout.set_ellipsize(Pango.EllipsizeMode.END)
             layout.set_alignment(align)
             cr.set_source_rgb(*rgb(t[color]))
@@ -296,59 +351,45 @@ class Card(Gtk.ApplicationWindow):
             PangoCairo.show_layout(cr, layout)
 
         rtl = loc.lang == "fa"
-        text(
-            "روز" if rtl else "Rooz", 54 if rtl else 16, 11, w / s - 70,
-            12, "accent_text", 600, Pango.Alignment.RIGHT if rtl else Pango.Alignment.LEFT,
-        )
-        text(WEEKDAYS[loc.lang][self.app.today.weekday()], 16, 38 * max(1, ts), 288, 11, "muted")
+        text("روزلت" if rtl else "Roozlet", 54 if rtl else 40, 11, 228,
+             12, "fg", 600, Pango.Alignment.RIGHT if rtl else Pango.Alignment.LEFT)
+        seasonal(cr, "autumn", 286 if rtl else 14, 11, 18, t["accent_text"])
+        text(WEEKDAYS[loc.lang][self.app.today.weekday()], 16, 39*ys, 288, 11, "muted")
         day = self.app.today
         j = jalali(day)
-        hijri = self.app.repo.hijri(day)
-        columns = []
+        columns = {"shamsi": (loc.n(j.day), JMONTHS[loc.lang][j.month-1], loc.n(j.year))}
+        if self.cfg["calendar"]["show_gregorian_column"]:
+            columns["gregorian"] = (loc.n(day.day), GMONTHS[loc.lang][day.month-1], loc.n(day.year))
         if self.cfg["calendar"]["show_hijri_column"]:
+            hijri = self.app.repo.hijri(day)
             if hijri:
                 hy, hm, hd = map(int, hijri.split("-"))
-                columns.append((loc.n(hd), HMONTHS[loc.lang][hm - 1], loc.n(hy), False))
+                columns["hijri"] = (loc.n(hd), HMONTHS[loc.lang][hm-1], loc.n(hy))
             else:
-                columns.append(("—", loc.t("hijri_unavailable"), "—", False))
-        columns.extend(
-            [
-                (loc.n(day.day), GMONTHS[loc.lang][day.month - 1], loc.n(day.year), False),
-                (loc.n(j.day), JMONTHS[loc.lang][j.month - 1], loc.n(j.year), True),
-            ]
-        )
-        cw = 288 / len(columns)
-        yy = 57 * max(1, ts)
-        for i, (num, month, year, primary) in enumerate(columns):
-            x = 16 + i * cw
-            text(num, x, yy, cw, 30 if primary else 23, "accent_text" if primary else "fg", 600)
-            text(month, x, yy + 39 * ts, cw, 10.5, "fg", 500)
-            text(year, x, yy + 57 * ts, cw, 10, "muted")
-        sep = hh - 67
-        cr.set_source_rgb(*rgb(t["line"]))
+                columns["hijri"] = ("—", loc.t("unavailable"), "—")
+        for key, (num, month, year) in columns.items():
+            x, width = self.date_slots()[key]
+            primary = key == "shamsi"
+            y = (62 if primary else 75)*ys
+            rounded(x, y, width, (120 if primary else 107)*ys, 12)
+            cr.set_source_rgba(*rgb(t["accent"] if primary else t["muted"]), .16 if primary else .04)
+            cr.fill_preserve()
+            cr.set_source_rgba(*rgb(t["accent"] if primary else t["muted"]), .7 if primary else .16)
+            cr.set_line_width(1)
+            cr.stroke()
+            if primary:
+                seasonal(cr, t["season"], 150, 66*ys, 20, t["accent_text"])
+            text(num, x+3, (90 if primary else 99)*ys, width-6,
+                 34 if primary else 24, "accent_text" if primary else "fg", 600)
+            text(month, x+3, 140*ys, width-6, 10.5, "fg", 500)
+            text(year, x+3, 162*ys, width-6, 10, "muted")
+        cr.set_source_rgba(*rgb(t["line"]), .85)
         cr.set_line_width(1)
-        cr.move_to(16, sep)
-        cr.line_to(304, sep)
+        cr.move_to(16, 188*ys)
+        cr.line_to(304, 188*ys)
         cr.stroke()
-        visible = self.app.repo.visible(day, self.cfg["events"])
-        events = self.app.repo.events(day)
-        if visible:
-            value = loc.n(visible[0]["title"].get(loc.lang) or visible[0]["title"]["fa"])
-            if len(visible) > 1:
-                value += " · " + loc.more(len(visible) - 1)
-            if visible[0]["is_public_holiday"]:
-                value = "◆ " + value
-        else:
-            value = (
-                loc.t("none" if self.app.repo.known(day) else "incomplete")
-                if not events
-                else loc.t("filtered")
-            )
-        if self.app.repo.errors and not self.app.repo.known(day):
-            value = loc.t("unavailable")
-        text(value, 16, sep + 9, 288, 10.5, "holiday" if self.app.repo.holiday(day) else "fg")
         if self.cfg["calendar"]["show_next_public_holiday"]:
             nxt = self.app.repo.next_holiday(day)
-            caption = loc.remaining(nxt[1]) if nxt else loc.t("no_next")
-            text(caption, 16, sep + 32 * ts, 288, 9.5, "muted")
+            text(loc.remaining(nxt[1]) if nxt else loc.t("no_next"),
+                 16, 219*ys, 288, 9.5, "muted")
         return False

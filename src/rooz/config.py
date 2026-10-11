@@ -2,6 +2,7 @@
 
 import copy
 import json
+import math
 import os
 import re
 import tempfile
@@ -14,6 +15,12 @@ DEFAULTS = {
     "timezone": "Asia/Tehran",
     "appearance": {
         "theme": "dark",
+        "style": "seasonal",
+        "season": "auto",
+        "accent_source": "seasonal",
+        "show_artwork": True,
+        "artwork_intensity": 0.65,
+        "calendar_follow_viewed_month": False,
         "accent_color": "#5FE3AF",
         "background_opacity": 0.9,
         "widget_scale": 1.0,
@@ -25,6 +32,7 @@ DEFAULTS = {
         "prefer_numerical_dates": False,
         "show_gregorian_cell_numbers": True,
         "show_hijri_column": True,
+        "show_gregorian_column": True,
         "show_next_public_holiday": True,
     },
     "events": {
@@ -76,9 +84,20 @@ def validate(raw):
         ("background_opacity", 0.5, 1.0),
         ("widget_scale", 0.8, 1.6),
         ("text_scale", 0.85, 1.4),
+        ("artwork_intensity", 0.0, 1.0),
     ]:
         v = r.get(k, a[k])
-        a[k] = max(lo, min(hi, v)) if type(v) in (float, int) and v == v else a[k]
+        a[k] = max(lo, min(hi, v)) if type(v) in (float, int) and math.isfinite(v) else a[k]
+    if "appearance" in raw and "style" not in r:
+        a["style"] = "classic"
+        a["accent_source"] = "custom"
+    for key, choices in {
+        "style": ("classic", "seasonal"),
+        "season": ("auto", "spring", "summer", "autumn", "winter"),
+        "accent_source": ("seasonal", "custom"),
+    }.items():
+        if a[key] not in choices:
+            a[key] = DEFAULTS["appearance"][key]
     if a["theme"] not in ("dark", "light"):
         a["theme"] = "dark"
     if a["font_mode"] not in ("vazirmatn", "system", "custom"):

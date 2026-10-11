@@ -18,6 +18,7 @@ def stage(dest):
     shutil.copytree(ROOT / "src/rooz", package, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
     shutil.copytree(ROOT / "data/calendars", package / "data/calendars")
     shutil.copytree(ROOT / "data/fonts", package / "data/fonts")
+    shutil.copytree(ROOT / "data/themes", package / "data/themes")
     launcher = dest / "usr/bin/rooz"
     launcher.parent.mkdir(parents=True, exist_ok=True)
     launcher.write_text(
@@ -63,7 +64,7 @@ def build():
         deps = "python3 (>= 3.9), python3-gi, python3-cairo, python3-gi-cairo, gir1.2-gtk-3.0, tzdata, libfontconfig1"
         size = sum(p.stat().st_size for p in dest.rglob("*") if p.is_file())
         (control / "control").write_text(
-            f"Package: rooz\nVersion: {VERSION}\nArchitecture: all\nSection: utils\nPriority: optional\nMaintainer: {maintainer}\nHomepage: {homepage}\nDepends: {deps}\nInstalled-Size: {(size + 1023) // 1024}\nDescription: compact offline Persian calendar for Xfce\n Rooz displays three calendars with bilingual settings and offline Iranian holidays.\n"
+            f"Package: rooz\nVersion: {VERSION}\nArchitecture: all\nSection: utils\nPriority: optional\nMaintainer: {maintainer}\nHomepage: {homepage}\nDepends: {deps}\nInstalled-Size: {(size + 1023) // 1024}\nDescription: compact offline Persian calendar for Xfce\n Roozlet displays three calendars with bilingual settings and offline Iranian holidays.\n"
         )
         md5 = []
         for p in sorted(dest.rglob("*")):

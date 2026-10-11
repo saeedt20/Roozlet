@@ -4,6 +4,18 @@ The original 0.1.0 tests were performed on Linux Mint 22.3 Xfce/X11 with Python 
 PyGObject 3.48.2, Cairo 1.25.1, Xfwm4 4.18.0, Fontconfig 2.15.0 and Poppler 24.02.0.
 Only application window captures belong in docs/screenshots.
 
+## 0.2.0 seasonal redesign — 11 October 2026
+
+- Passed all **44 tests**: 30 calendar/data/configuration/format/season tests and 14 native GTK checks in an isolated Ubuntu 24.04 private GTK3 runtime with virtual X11 and temporary XDG profiles.
+- Passed all **14 GTK checks at GDK_SCALE=2**. This is virtual-display evidence, not a claim of native Mint/Xfce installation or desktop interaction testing.
+- Added checks for all seasonal boundaries, manual/automatic precedence, calendar-only follow-month contexts, legacy appearance migration, persisted custom accents, finite slider values, scene checksums, centered Shamsi in both languages/all satellite visibility cases, title picker and actual preview callbacks.
+- Annual data validation passed with 365 mappings, 305 occasions, 26 statutory holiday dates, and no issues; annual data was not modified.
+- Actual application-window captures were reviewed for seasonal cards, Persian right-sidebar calendar, English light calendar, settings previews and monthly occasions.
+- The extracted installed package launched from `/tmp` with all four scenes, independent resource paths, live language/season controls, actual numerical GTK clipboard, title month picker and occasion view callbacks verified. This is not an apt install/upgrade.
+- Rootless package `roozlet_0.2.0-1_all.deb` was built and its control metadata inspected. It retains `Package: rooz`, version `0.2.0-1`, architecture `all`, declared native dependencies and all four offline scene assets.
+
+Native Mint apt installation/upgrade, login startup cycle, physical monitor hotplug, mixed DPI, overnight/resume and Wayland checks were not repeated. Existing historical checks below do not certify the redesigned version. An initial logic-only command without this workspace's private GI dependencies could not exercise the graphical startup check; the complete configured runtime run above passed it.
+
 ## 0.1.1 regression checks — 11 October 2026
 
 The fixes were checked in an isolated Ubuntu 24.04 environment with distribution
@@ -140,3 +152,7 @@ confirmed its holiday details and copied `۲۲ آبان ۱۴۰۵` through the re
 and GTK clipboard. At 200% scaling, scrolling reached all three copy controls.
 The holiday and scrolled 200% screenshots were inspected; visible scrollbars,
 joined Persian text, selected-day contrast and reachable controls were confirmed.
+
+The 0.2.0 artwork is about 10.73 MiB before packaging, exceeding the brief’s provisional 8 MiB artwork target to retain the generated scene quality. The complete Debian package is about 10.52 MiB. Images are loaded near display size with a bounded cache.
+
+The 0.2.0 seasonal widget held at 74,476–74,480 KiB RSS during a 35.01-second idle interval in the private GTK virtual X11 test environment. Process CPU increased by 0.0006 seconds (0.002% of one core). See `docs/v0.2.0-resource-check.json`. This short measurement does not establish native Xfce, overnight, suspend/resume or login behavior.

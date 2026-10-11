@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "format": "png",
+  "source": "Original AI-generated scenic artwork created for Roozlet on 2026-10-11",
+  "seasons": {
+    "spring": {
+      "file": "spring/landscape.png",
+      "sha256": "e2e96c5052d1c5de716b589b53c1da879dda26ee5fbbd1418c6d2c9dbc5fb38b",
+      "focal_point": [
+        0.5,
+        0.5
+      ]
+    },
+    "summer": {
+      "file": "summer/landscape.png",
+      "sha256": "015395a4e3c86608ba5f1f62f1b32eaf2c357a26b6cecc70b62b48187db75852",
+      "focal_point": [
+        0.5,
+        0.5
+      ]
+    },
+    "autumn": {
+      "file": "autumn/landscape.png",
+      "sha256": "679585e533daa3cf89953b30833050dc203d7992f63c27cf4a6784548ec203eb",
+      "focal_point": [
+        0.5,
+        0.5
+      ]
+    },
+    "winter": {
+      "file": "winter/landscape.png",
+      "sha256": "f50bea3c6d36c2c63e3f228ce79e559b6609c9669b039ead0d241f9299da0476",
+      "focal_point": [
+        0.5,
+        0.5
+      ]
+    }
+  }
+}
