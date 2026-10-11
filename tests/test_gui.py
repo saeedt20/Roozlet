@@ -4,6 +4,7 @@ import copy, os, unittest
 from datetime import date
 from types import SimpleNamespace
 import gi
+import cairo
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
@@ -16,7 +17,8 @@ from rooz import fonts
 from rooz.ui.widget import Card
 from rooz.ui.calendar_window import CalendarWindow
 from rooz.ui.settings import Settings
-from rooz.ui.theme import apply
+from rooz.ui.theme import apply, rgb, tokens
+from rooz.calendar_service import MIN_YEAR, MAX_YEAR, gregorian
 
 
 def pump():
@@ -56,8 +58,8 @@ class GuiTests(unittest.TestCase):
             def change(self, s, k, v):
                 self.cfg[s][k] = v
 
-            def copy(self, *args):
-                self.actions.append(("copy", args))
+            def copy(self, *args, **kwargs):
+                self.actions.append(("copy", args, kwargs))
 
             def reset_position(self):
                 pass
@@ -181,6 +183,110 @@ class GuiTests(unittest.TestCase):
         self.assertLessEqual(c.dimensions()[1], area.height)
         self.assertEqual(30, len(w.cells))
         self.assertGreaterEqual(w.get_size().height, 300)
+
+    def test_header_title_pixels_and_gear_are_on_opposite_correct_edges(self):
+        c = self.window(Card)
+        for lang in ("fa", "en"):
+            self.app.cfg["language"] = lang
+            c.apply()
+            c.fixed.check_resize()
+            pump()
+            width, height = c.dimensions()
+            self.assertEqual(lang == "fa", c.gear.get_allocation().x < width / 2)
+            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+            c.draw(c.canvas, cairo.Context(surface))
+            surface.flush()
+            pixels = bytes(surface.get_data())
+            target = tuple(round(v * 255) for v in rgb(tokens(self.app.cfg)["accent_text"]))
+            xs = []
+            for y in range(10, 35):
+                for x in range(width):
+                    offset = y * surface.get_stride() + x * 4
+                    actual = (pixels[offset + 2], pixels[offset + 1], pixels[offset])
+                    if all(abs(a - b) < 5 for a, b in zip(actual, target)):
+                        xs.append(x)
+            self.assertTrue(xs, "Title should render in the header")
+            self.assertEqual(lang == "fa", sum(xs) / len(xs) > width / 2)
+
+    def test_numeric_setting_tooltip_and_explicit_numeric_context_copy(self):
+        c = self.window(Card)
+        self.app.cfg.update(language="en", digits="latin")
+        self.app.cfg["calendar"]["prefer_numerical_dates"] = True
+        c.apply()
+        tooltip = SimpleNamespace(set_text=lambda value: setattr(self, "tip", value))
+        c.tooltip(c.canvas, 100, 100, False, tooltip)
+        self.assertIn("1405/7/18", self.tip)
+        self.assertIn("2026/10/10", self.tip)
+        settings = self.window(Settings)
+        switches = []
+
+        def find_switches(widget):
+            if isinstance(widget, Gtk.Box):
+                children = widget.get_children()
+                if any(isinstance(c, Gtk.Label) and c.get_text() == self.app.loc.t("numerical_dates") for c in children):
+                    switches.extend(c for c in children if isinstance(c, Gtk.Switch))
+            if isinstance(widget, Gtk.Container):
+                for child in widget.get_children():
+                    find_switches(child)
+
+        find_switches(settings)
+        self.assertEqual(1, len(switches))
+        self.assertTrue(switches[0].get_active())
+        switches[0].set_active(False)
+        self.assertFalse(self.app.cfg["calendar"]["prefer_numerical_dates"])
+        event = Gdk.Event.new(Gdk.EventType.BUTTON_PRESS)
+        event.window = c.canvas.get_window()
+        event.button, event.x, event.y = 3, 100, 100
+        event.time = Gdk.CURRENT_TIME
+        menu = c.menu(event)
+        numeric = next(i for i in menu.get_children() if i.get_label() == self.app.loc.t("copy_numeric"))
+        numeric.get_submenu().get_children()[1].activate()
+        self.assertIn(("copy", (self.app.today, 1), {"numerical": True}), self.app.actions)
+        menu.popdown()
+        menu.destroy()
+
+    def test_today_right_click_picker_selection_and_left_click(self):
+        w = self.window(CalendarWindow)
+        w.navigate(-1)
+        previous = w.selected
+        self.assertTrue(w.today_press(w.today_button, SimpleNamespace(button=3)))
+        picker = w.month_picker
+        self.assertEqual(previous, w.selected, "Right-click must not reset the selected date")
+        self.assertEqual(set(range(1, 13)), set(picker.month_buttons))
+        picker.change_year(1)
+        picker.month_buttons[12].clicked()
+        self.assertEqual((1406, 12), (w.year, w.month))
+        self.assertIsNone(w.month_picker)
+        self.assertEqual(date(2026, 10, 10), self.app.today)
+        self.assertFalse(w.today_press(w.today_button, SimpleNamespace(button=1)))
+        w.today_button.clicked()
+        self.assertEqual(self.app.today, w.selected)
+
+    def test_month_picker_clamps_days_and_obeys_year_limits_in_both_languages(self):
+        w = self.window(CalendarWindow)
+        w.select(gregorian(1405, 1, 31))
+        w.choose_month(1405, 12)
+        self.assertEqual(gregorian(1405, 12, 29), w.selected)
+        for lang in ("fa", "en"):
+            self.app.cfg["language"] = lang
+            w.apply()
+            self.assertTrue(w.today_button.emit("popup-menu"))
+            picker = w.month_picker
+            self.assertEqual(12, len(picker.month_buttons))
+            self.assertEqual(
+                "فروردین" if lang == "fa" else "Farvardin", picker.month_buttons[1].get_label()
+            )
+            picker.year = MIN_YEAR
+            picker.apply()
+            picker.change_year(-1)
+            self.assertEqual(MIN_YEAR, picker.year)
+            self.assertFalse(picker.previous_year.get_sensitive())
+            picker.year = MAX_YEAR
+            picker.apply()
+            picker.change_year(1)
+            self.assertEqual(MAX_YEAR, picker.year)
+            self.assertFalse(picker.next_year.get_sensitive())
+            w.dismiss_month_picker()
 
 
 if __name__ == "__main__":

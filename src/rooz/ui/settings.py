@@ -157,6 +157,8 @@ class Settings(Gtk.ApplicationWindow):
             [("Asia/Tehran", loc.t("tehran")), ("system", loc.t("system"))],
         )
         pages["dates"].pack_start(label(loc.t("zone_help"), "muted", wrap=True), False, False, 0)
+        toggle("dates", "numerical_dates", "calendar", "prefer_numerical_dates")
+        pages["dates"].pack_start(label(loc.t("numerical_help"), "muted", wrap=True), False, False, 0)
         toggle("dates", "gregorian_cells", "calendar", "show_gregorian_cell_numbers")
         toggle("dates", "hijri_column", "calendar", "show_hijri_column")
         for category in ("national", "cultural", "religious", "international"):

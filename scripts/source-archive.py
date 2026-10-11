@@ -10,7 +10,7 @@ from rooz import __version__
 
 DIST = ROOT / "dist"
 DIST.mkdir(exist_ok=True)
-target = DIST / f"rooz-{__version__}-source.tar.gz"
+target = DIST / f"roozlet-{__version__}-source.tar.gz"
 epoch = int(os.environ.get("SOURCE_DATE_EPOCH", "1791633600"))
 EXCLUDED = {".git", "dist", "build", "__pycache__", ".ruff_cache", ".pytest_cache"}
 with (
@@ -27,14 +27,14 @@ with (
             or rel.parts[:2] == ("debian", "rooz")
         ):
             continue
-        entry = tarfile.TarInfo(f"rooz-{__version__}/{rel}")
+        entry = tarfile.TarInfo(f"roozlet-{__version__}/{rel}")
         data = p.read_bytes()
         entry.size = len(data)
         entry.mtime = epoch
         entry.mode = 0o755 if os.access(p, os.X_OK) else 0o644
         entry.uid = entry.gid = 0
         archive.addfile(entry, io.BytesIO(data))
-assets = sorted([*DIST.glob("*.deb"), target])
+assets = sorted(p for p in (DIST / f"roozlet_{__version__}-1_all.deb", target) if p.exists())
 (DIST / "SHA256SUMS").write_text(
     "".join(f"{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n" for p in assets)
 )
