@@ -1,3 +1,37 @@
+# Roozlet 0.2.0 seasonal design
+
+The desktop card is **320 × 236 logical pixels**. Its physical date order is
+Gregorian / Shamsi / Iranian Hijri. Shamsi stays on the content centerline in both
+languages and with either satellite hidden. Primary date panels, vector seasonal
+marks and translucent scenery use shared tokens. Winter uses a snowflake.
+
+Four original bundled scenes are drawn from `data/themes/seasons/`, with a bounded
+8-entry scaled-image cache and a solid-color fallback. No runtime download,
+wallpaper modification or live blur is required. An opaque non-composited fallback
+keeps corners readable. Fonts and text are not made translucent.
+
+Automatic seasons follow the configured civil day converted to Jalali, not the
+Gregorian month. Manual overrides win. Dark/light appearance and custom accents
+are independent. Optional follow-month mode applies a scoped season class only
+to the calendar and its popover; widget and Settings keep today's season.
+
+Fresh profiles default to Seasonal/Automatic. Legacy appearance records migrate
+to Classic/Custom so their stored colors and other preferences survive. The owner
+can enable Seasonal in Settings. Technical package, executable, application-ID,
+WM-class and config-directory identities remain unchanged; visible names are
+Roozlet / روزلت.
+
+The expanded calendar defaults to 860 × 680 logical pixels, clamped to work area.
+Its right Persian / left English sidebar collapses below 660 logical pixels; a
+header menu exposes the same actions on narrow windows. Native date cells retain
+physical Saturday-right / Friday-left order. The body can scroll at large text
+or 200% DPI. Clicking the month title and Today right-click open the shared picker.
+An actual monthly occasion list and About dialog back the sidebar actions.
+
+All dates and event states remain computed from the existing calendar/data
+services. The remainder below records retained interactions from earlier versions;
+older default dimensions and date order are superseded by this section.
+
 # Design and interaction
 
 The default card is 320 × 208 logical pixels: 16-pixel inset, 17-pixel corner
@@ -8,8 +42,8 @@ scale is capped to keep the entire card visible. Text stays opaque while only th
 background uses opacity. A non-composited session uses an opaque fallback.
 No wallpaper blur or compositor/theme settings are changed.
 
-Persian is the physically rightmost, visually dominant date column in both
-languages. Gregorian is centered and Hijri leftmost. Calendar-grid coordinates
+Persian is physically centered and visually dominant in both languages.
+Gregorian is leftmost and Hijri rightmost. Calendar-grid coordinates
 are generated from real weekdays; Saturday is physically rightmost and Friday
 leftmost regardless of language. Persian controls are RTL; English controls LTR.
 Pango handles joining and bidi text. No text is manually reversed in the UI.

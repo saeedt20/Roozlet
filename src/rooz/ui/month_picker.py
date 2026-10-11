@@ -5,6 +5,7 @@ from gi.repository import Gdk, Gtk
 from ..calendar_service import MAX_YEAR, MIN_YEAR, jalali
 from ..i18n import JMONTHS
 from .common import button, clear, direction, label
+from .theme import style_window
 
 
 class MonthPicker(Gtk.Popover):
@@ -36,6 +37,7 @@ class MonthPicker(Gtk.Popover):
         self.calendar.choose_month(self.year, month)
 
     def apply(self):
+        style_window(self, self.calendar.app.cfg, self.calendar.app.today, self.calendar.month)
         loc = self.calendar.app.loc
         rtl = loc.lang == "fa"
         clear(self.root)

@@ -22,10 +22,10 @@ def enabled():
 def set_enabled(value, executable="/usr/bin/rooz"):
     if value:
         if not Path(executable).is_file():
-            raise ValueError("Install Rooz before enabling login startup.")
+            raise ValueError("Install Roozlet before enabling login startup.")
         atomic_write(
             path(),
-            "[Desktop Entry]\nType=Application\nName=Rooz\nName[fa]=روز\nExec=/usr/bin/rooz --widget\nTryExec=/usr/bin/rooz\nTerminal=false\nX-GNOME-Autostart-enabled=true\n",
+            "[Desktop Entry]\nType=Application\nName=Roozlet\nName[fa]=روزلت\nExec=/usr/bin/rooz --widget\nTryExec=/usr/bin/rooz\nTerminal=false\nX-GNOME-Autostart-enabled=true\n",
         )
     else:
         path().unlink(missing_ok=True)

@@ -25,3 +25,7 @@
 Original application code and documentation are MIT licensed, copyright
 2026 Saeed Taheri; see `LICENSE`. The materials above retain their own licenses
 and attribution; the MIT license does not relicense them.
+
+## Original seasonal artwork
+
+The four seasonal landscapes were generated specifically for Roozlet with OpenAI image generation on 2026-10-11 and are distributed by the owner under the project MIT license. They are imagined scenery, not stock photographs of an identified place. Provenance and SHA-256 checksums are in `data/themes/seasons/ATTRIBUTION.md` and `manifest.json`. No reference UI screenshots are embedded in the scenes.

@@ -22,42 +22,43 @@ compact desktop card. Double-click it to open a full month calendar with Iranian
 occasions and public holidays. Built with native GTK3 for **Linux Mint 22.3 Xfce**,
 it works offline and stays out of the way.
 
-The first release retains the application name **Rooz / روز**, the `rooz` command,
-and the Debian package name `rooz`. The GitHub project is **Roozlet**.
+The visible application name is **Roozlet / روزلت**. The established `rooz` command
+and Debian package identity remain unchanged so existing installations upgrade normally.
 
-## See it in action
+## Four seasons, one compact calendar
 
-These are actual Roozlet 0.1.1 GTK window captures from a virtual X11 display.
-The earlier Mint Xfce captures are kept in the examples below.
-The default card measures **320 × 208 logical pixels**.
+Roozlet 0.2.0 adds **Spring, Summer, Autumn and Winter** appearances with bundled
+scenery and scalable seasonal icons. The **Shamsi date is always in the middle**
+of the 320 × 236 logical-pixel widget, with Gregorian on the left and Iranian
+Hijri on the right. Hiding either auxiliary calendar keeps Shamsi centered.
 
-<table>
-  <tr><th>Persian · dark</th><th>English · light</th></tr>
-  <tr>
-    <td><img src="docs/screenshots/v0.1.1-card-fa-dark.png" alt="Persian widget with right-aligned title and settings gear on the left" width="320"></td>
-    <td><img src="docs/screenshots/v0.1.1-card-en-light.png" alt="English widget with left-aligned title and settings gear on the right" width="320"></td>
-  </tr>
-  <tr><th>Month calendar</th><th>Appearance settings</th></tr>
-  <tr>
-    <td><img src="docs/screenshots/v0.1.1-calendar-fa-dark.png" alt="Persian month calendar with Saturday on the right and Friday on the left" width="420"></td>
-    <td><img src="docs/screenshots/v0.1.1-settings-en-light.png" alt="English appearance settings with theme, font and scaling controls" width="368"></td>
-  </tr>
-</table>
-
-### New in 0.1.1
-
-Right-click **Today** to choose a month directly. Turn on **Prefer numerical form
-of dates** in **Settings → Language & dates** for `year/month/day` tooltips and
-clipboard copies. You can also right-click the desktop card and use **Copy numerical
-date** without changing the preference.
+These are actual GTK window captures from an isolated virtual X11 display, not
+design mockups or a claim of a native Mint installation test.
 
 <table>
-  <tr><th>All 12 months and year navigation</th><th>Numerical-date preference</th></tr>
-  <tr>
-    <td><img src="docs/screenshots/v0.1.1-month-picker-fa-dark.png" alt="Persian month picker opened from Today, with 12 month buttons and year navigation" width="420"></td>
-    <td><img src="docs/screenshots/v0.1.1-dates-en-light.png" alt="English date settings with Prefer numerical form of dates enabled" width="368"></td>
-  </tr>
+<tr><th>Spring</th><th>Summer</th></tr>
+<tr><td><img src="docs/screenshots/v0.2.0-card-spring-fa-dark.png" width="320" alt="Spring centered Shamsi widget"></td><td><img src="docs/screenshots/v0.2.0-card-summer-fa-dark.png" width="320" alt="Summer centered Shamsi widget"></td></tr>
+<tr><th>Autumn</th><th>Winter</th></tr>
+<tr><td><img src="docs/screenshots/v0.2.0-card-autumn-fa-dark.png" width="320" alt="Autumn centered Shamsi widget"></td><td><img src="docs/screenshots/v0.2.0-card-winter-fa-dark.png" width="320" alt="Winter widget with snowflake"></td></tr>
 </table>
+
+![Persian calendar with right sidebar](docs/screenshots/v0.2.0-calendar-fa-dark.png)
+![English light calendar with left sidebar](docs/screenshots/v0.2.0-calendar-en-light.png)
+![Four seasonal settings previews](docs/screenshots/v0.2.0-settings-fa-dark.png)
+
+### New in 0.2.0
+
+- Automatic appearance follows today's **Jalali season**, with a manual override.
+- Dark/light appearance, custom accents, artwork intensity and Classic mode are independent choices.
+- Optional **Follow displayed month** changes only the full calendar, leaving the desktop widget on today's season.
+- Click the month title or right-click **Today** (Shift+F10 when focused) to choose any of the 12 months and navigate years.
+- The adaptive sidebar mirrors between Persian and English, with Calendar, Today, Occasions, Settings and About. The monthly occasion list links back to selected dates.
+- Numerical-date tooltips, explicit numerical clipboard actions, verified calendar data, position settings and opt-in startup remain available.
+
+**Upgrading:** old settings keep their Classic appearance and custom accent. To
+turn on scenery, open **Settings → Appearance → Appearance style → Seasonal**.
+Fresh installations use automatic seasonal appearance. No wallpaper or system
+theme is changed and no artwork is downloaded at runtime.
 
 <details>
 <summary>Earlier 0.1.0 Mint Xfce examples: English calendar, independent digits, holidays and 200% scaling</summary>
@@ -94,11 +95,11 @@ Full calendar at 200% scale on a constrained work area; scroll to reach the lowe
 
 ## Install
 
-Download `roozlet_0.1.1-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
+Download `roozlet_0.2.0-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
 From the folder containing the downloaded file:
 
 ```bash
-sudo apt install ./roozlet_0.1.1-1_all.deb
+sudo apt install ./roozlet_0.2.0-1_all.deb
 rooz
 ```
 

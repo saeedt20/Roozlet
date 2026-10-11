@@ -1,3 +1,5 @@
+> **0.2.0 update:** visible branding is Roozlet / روزلت; the centered Shamsi layout, four seasonal themes, and adaptive shell are specified in [SEASONAL_UI_REDESIGN.md](SEASONAL_UI_REDESIGN.md) and implemented as described in [DESIGN.md](DESIGN.md). Older appearance/order/dimension descriptions below are historical. Accuracy, offline behavior and compatibility requirements remain applicable.
+
 # Rooz — روز
 
 ## Complete build brief for Claude Code or Codex
