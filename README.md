@@ -27,24 +27,40 @@ and the Debian package name `rooz`. The GitHub project is **Roozlet**.
 
 ## See it in action
 
-These are actual application captures on Mint Xfce, not concept mockups.
+These are actual Roozlet 0.1.1 GTK window captures from a virtual X11 display.
+The earlier Mint Xfce captures are kept in the examples below.
 The default card measures **320 × 208 logical pixels**.
 
 <table>
   <tr><th>Persian · dark</th><th>English · light</th></tr>
   <tr>
-    <td><img src="docs/screenshots/card-fa-dark.png" alt="Compact Persian desktop widget in the dark theme" width="320"></td>
-    <td><img src="docs/screenshots/card-en-light.png" alt="Compact English desktop widget in the light theme" width="320"></td>
+    <td><img src="docs/screenshots/v0.1.1-card-fa-dark.png" alt="Persian widget with right-aligned title and settings gear on the left" width="320"></td>
+    <td><img src="docs/screenshots/v0.1.1-card-en-light.png" alt="English widget with left-aligned title and settings gear on the right" width="320"></td>
   </tr>
   <tr><th>Month calendar</th><th>Appearance settings</th></tr>
   <tr>
-    <td><img src="docs/screenshots/calendar-fa-dark.png" alt="Persian month calendar with Saturday on the right and Friday on the left" width="420"></td>
-    <td><img src="docs/screenshots/settings-en-light.png" alt="English appearance settings with theme, font and scaling controls" width="368"></td>
+    <td><img src="docs/screenshots/v0.1.1-calendar-fa-dark.png" alt="Persian month calendar with Saturday on the right and Friday on the left" width="420"></td>
+    <td><img src="docs/screenshots/v0.1.1-settings-en-light.png" alt="English appearance settings with theme, font and scaling controls" width="368"></td>
+  </tr>
+</table>
+
+### New in 0.1.1
+
+Right-click **Today** to choose a month directly. Turn on **Prefer numerical form
+of dates** in **Settings → Language & dates** for `year/month/day` tooltips and
+clipboard copies. You can also right-click the desktop card and use **Copy numerical
+date** without changing the preference.
+
+<table>
+  <tr><th>All 12 months and year navigation</th><th>Numerical-date preference</th></tr>
+  <tr>
+    <td><img src="docs/screenshots/v0.1.1-month-picker-fa-dark.png" alt="Persian month picker opened from Today, with 12 month buttons and year navigation" width="420"></td>
+    <td><img src="docs/screenshots/v0.1.1-dates-en-light.png" alt="English date settings with Prefer numerical form of dates enabled" width="368"></td>
   </tr>
 </table>
 
 <details>
-<summary>More examples: English calendar, independent digits, holiday details and 200% scaling</summary>
+<summary>Earlier 0.1.0 Mint Xfce examples: English calendar, independent digits, holidays and 200% scaling</summary>
 
 ![English month calendar](docs/screenshots/calendar-en-light.png)
 
@@ -68,6 +84,8 @@ Full calendar at 200% scale on a constrained work area; scroll to reach the lowe
 
 - **Compact desktop widget:** three dates, an occasion summary and the next public-holiday countdown.
 - **Full calendar:** computed Persian month grids, Gregorian secondary dates, distinct holiday/event markers, selected-day details and copy actions.
+- **Quick month selection:** right-click **Today** (or focus it and press Shift+F10) to choose from all 12 Persian months, with year navigation. Left-click returns to today.
+- **Numerical dates:** enable **Settings → Dates → Prefer numerical form of dates** for `year/month/day` hover text, date details and clipboard copies. The widget's **Copy numerical date** menu also works without enabling the preference.
 - **Bilingual controls:** complete Persian and English interfaces, independent Persian/Latin digits and bundled Vazirmatn fonts.
 - **Personal appearance:** dark/light themes, accent color, background opacity, font choice, card size and text scale.
 - **Desktop behavior:** header dragging, position lock/reset, optional always-on-top and all-workspaces placement, and single-instance operation.
@@ -76,11 +94,11 @@ Full calendar at 200% scale on a constrained work area; scroll to reach the lowe
 
 ## Install
 
-Download `rooz_0.1.0-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
+Download `roozlet_0.1.1-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
 From the folder containing the downloaded file:
 
 ```bash
-sudo apt install ./rooz_0.1.0-1_all.deb
+sudo apt install ./roozlet_0.1.1-1_all.deb
 rooz
 ```
 
@@ -176,9 +194,12 @@ GDK_SCALE=2 ./scripts/test-gui.sh
 ```
 
 The GTK checks need an active display or Xvfb. They use temporary XDG directories
-and a private D-Bus session. Recorded validation includes **20 core tests**, **seven
+and a private D-Bus session. The original 0.1.0 validation includes **20 core tests**, **seven
 GTK checks at each scale**, **21 native Xfce interaction checks**, installed-layout
 launches, Persian clipboard round trips and reproducible package builds.
+Version 0.1.1 passes **24 logic tests and 11 GTK checks**, with all 11 GTK checks
+also passing at 200% scale; its extracted-package GUI and numerical clipboard
+callbacks were checked separately.
 
 See the [full validation record](docs/TESTING.md), including checks still requiring
 real login, suspend, physical monitor changes and package-manager lifecycle testing.

@@ -168,8 +168,8 @@ def main(argv=None):
                 self.refresh()
             return True
 
-        def copy(self, day, index):
-            values = dates(day, self.loc, self.repo)
+        def copy(self, day, index, numerical=None):
+            values = dates(day, self.loc, self.repo, numerical)
             text = "\n".join(values) if index is None else values[index]
             clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
             clipboard.set_text(text, -1)

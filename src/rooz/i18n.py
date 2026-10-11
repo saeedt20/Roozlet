@@ -14,6 +14,18 @@ PAIRS = {
     "font": ("Font", "قلم"),
     "text_size": ("Text size", "اندازهٔ متن"),
     "digits": ("Digit style", "نوع ارقام"),
+    "numerical_dates": ("Prefer numerical form of dates", "نمایش عددی تاریخ‌ها"),
+    "numerical_help": (
+        "Use year/month/day (2000/1/1) instead of 1 January 2000 in hover text and copied dates.",
+        "در متن راهنما و تاریخ‌های کپی‌شده، سال/ماه/روز (۲۰۰۰/۱/۱) به‌جای ۱ ژانویهٔ ۲۰۰۰ نمایش داده می‌شود.",
+    ),
+    "copy_numeric": ("Copy numerical date", "کپی تاریخ عددی"),
+    "copy_hijri": ("Copy Hijri date", "کپی تاریخ قمری"),
+    "choose_month": ("Choose month", "انتخاب ماه"),
+    "today_help": (
+        "Click to return to today. Right-click to choose a month (Shift+F10 with keyboard focus).",
+        "برای بازگشت به امروز کلیک کنید. برای انتخاب ماه راست‌کلیک کنید (با صفحه‌کلید: Shift+F10).",
+    ),
     "persian": ("Persian", "فارسی"),
     "latin": ("Latin", "لاتین"),
     "opacity": ("Background opacity", "میزان کدری پس‌زمینه"),

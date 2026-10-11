@@ -54,7 +54,7 @@ def build():
     homepage = re.search(r"^Homepage: (.+)$", metadata, re.MULTILINE).group(1)
     dist = ROOT / "dist"
     dist.mkdir(exist_ok=True)
-    artifact = dist / f"rooz_{VERSION}_all.deb"
+    artifact = dist / f"roozlet_{VERSION}_all.deb"
     with tempfile.TemporaryDirectory(prefix="rooz-build-") as tmp:
         dest = Path(tmp)
         stage(dest)

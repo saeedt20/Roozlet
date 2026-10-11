@@ -1,8 +1,33 @@
 # Validation record
 
-Tests are performed on Linux Mint 22.3 Xfce/X11 with Python 3.12.3, GTK 3.24.41,
+The original 0.1.0 tests were performed on Linux Mint 22.3 Xfce/X11 with Python 3.12.3, GTK 3.24.41,
 PyGObject 3.48.2, Cairo 1.25.1, Xfwm4 4.18.0, Fontconfig 2.15.0 and Poppler 24.02.0.
 Only application window captures belong in docs/screenshots.
+
+## 0.1.1 regression checks — 11 October 2026
+
+The fixes were checked in an isolated Ubuntu 24.04 environment with distribution
+GTK3/PyGObject packages, Python 3.12.3, temporary XDG directories, Xvfb and a private
+D-Bus session. This workspace required local TCP transports for the test display
+and bus; the application itself has no runtime network dependency.
+
+- **Passed:** all 35 tests (24 logic/configuration/data tests and 11 GTK checks).
+- **Passed:** all 11 GTK checks repeated at `GDK_SCALE=2`.
+- New regressions cover persisted numerical dates, both UI languages and digit
+  styles, unavailable Hijri dates, actual title pixels and gear placement,
+  numerical copy callbacks, right-click and keyboard month picker opening, normal
+  Today clicks, shorter-month day clamping and supported-year boundaries.
+- Actual GTK window captures were reviewed for the Persian/English headers,
+  numerical-date setting and 12-month picker.
+- **Passed:** the standard rootless build and annual data validation (no issues).
+  The extracted 0.1.1 package launched from an unrelated working directory; real
+  application callbacks changed settings, copied numerical dates through the GTK
+  clipboard and selected a month. This is an extracted-layout test, not an apt
+  install/upgrade.
+
+Native Xfce desktop behavior and a real Mint package install/upgrade were not
+repeated for 0.1.1. The original release's additional checks below remain historical
+evidence rather than new 0.1.1 results.
 
 Run logic/data checks:
 

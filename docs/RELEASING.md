@@ -2,7 +2,7 @@
 
 The authoritative application version is `src/rooz/__init__.py`; the Debian
 changelog must match it with revision `-1`. Current artifact:
-`dist/rooz_0.1.0-1_all.deb`.
+`dist/roozlet_0.1.1-1_all.deb`.
 
 ```
 sudo apt install python3 python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 tzdata libfontconfig1
@@ -37,8 +37,9 @@ documentation use the MIT license selected by the owner. Copyright and Debian
 maintainer attribution are Saeed Taheri; the public GitHub noreply address is
 used rather than a personal email. Third-party licenses stay unchanged.
 
-The GitHub project is Roozlet. Version 0.1.0 retains the tested Rooz application
-name, `rooz` CLI/package, and `rooz-0.1.0-source.tar.gz` asset name.
+The GitHub project and release downloads use the Roozlet name. Version 0.1.1 uses
+the established Rooz application name and `rooz` CLI/package, so the new
+`roozlet_0.1.1-1_all.deb` upgrades existing installations normally.
 The original University PDF is excluded from source archives; retrieve it using
 its provenance URL for re-verification. Never add real XDG user settings,
 unrelated desktop captures, credentials or runtime logs.
@@ -48,18 +49,20 @@ smoke check and the package build. GitHub action release versions were checked
 against their primary upstream release APIs during implementation. They are
 pinned to immutable commits. Virtual GTK CI does not certify Xfce behavior.
 
-The release-preparation workflow responds only to `v*` tags and uploads artifacts
-with read-only repository permissions. It does not publish a GitHub release.
+The release-preparation workflow responds to `v*` tags and manual dispatch,
+uploading reviewed artifacts with read-only repository permissions. Publishing
+is a separate, explicitly authorized action.
+
 For an explicitly authorized release, build and verify the artifacts, commit the
 reviewed source, and wait for CI to pass. Then publish the tag and assets:
 
 ```sh
-git tag -a v0.1.0 -m "Roozlet 0.1.0"
-git push origin v0.1.0
-gh release create v0.1.0 --repo saeedt20/Roozlet --verify-tag \
-  --title "Roozlet 0.1.0 — Persian calendar for Xfce" \
-  --notes-file docs/releases/v0.1.0.md \
-  dist/rooz_0.1.0-1_all.deb dist/rooz-0.1.0-source.tar.gz dist/SHA256SUMS
+git tag -a v0.1.1 -m "Roozlet 0.1.1"
+git push origin v0.1.1
+gh release create v0.1.1 --repo saeedt20/Roozlet --verify-tag \
+  --title "Roozlet 0.1.1 — Persian calendar for Xfce" \
+  --notes-file docs/releases/v0.1.1.md \
+  dist/roozlet_0.1.1-1_all.deb dist/roozlet-0.1.1-source.tar.gz dist/SHA256SUMS
 ```
 
 Download the published assets and check their SHA256SUMS. Verify checksums before

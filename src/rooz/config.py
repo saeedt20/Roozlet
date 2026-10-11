@@ -22,6 +22,7 @@ DEFAULTS = {
         "text_scale": 1.0,
     },
     "calendar": {
+        "prefer_numerical_dates": False,
         "show_gregorian_cell_numbers": True,
         "show_hijri_column": True,
         "show_next_public_holiday": True,

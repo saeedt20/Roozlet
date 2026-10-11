@@ -8,6 +8,7 @@ from ..calendar_service import MAX_YEAR, MIN_YEAR, gregorian, jalali, month_cell
 from ..formatting import dates, full_date
 from ..i18n import GMONTHS, JMONTHS, SHORT_WEEK, WEEKDAYS
 from .common import button, clear, direction, label
+from .month_picker import MonthPicker
 
 
 class CalendarWindow(Gtk.ApplicationWindow):
@@ -32,6 +33,8 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.connect("delete-event", lambda *_: self.hide() or True)
         self.connect("key-press-event", self.key)
         self.cells = {}
+        self.month_picker = None
+        self.connect("destroy", lambda *_: self.dismiss_month_picker())
         self.apply()
         self.show_all()
 
@@ -48,6 +51,33 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.year, self.month = j.year, j.month
         self.apply()
         self.focus_selected()
+
+    def choose_month(self, year, month):
+        if not (MIN_YEAR <= year <= MAX_YEAR and 1 <= month <= 12):
+            return
+        old = jalali(self.selected)
+        self.year, self.month = year, month
+        self.selected = gregorian(year, month, min(old.day, month_length(year, month)))
+        self.apply()
+        self.focus_selected()
+
+    def dismiss_month_picker(self):
+        picker, self.month_picker = self.month_picker, None
+        if picker:
+            picker.popdown()
+            picker.destroy()
+
+    def open_month_picker(self):
+        self.dismiss_month_picker()
+        self.month_picker = MonthPicker(self, self.today_button)
+        self.month_picker.popup()
+        self.month_picker.focus_month()
+        return True
+
+    def today_press(self, _, event):
+        if event.button == 3:
+            return self.open_month_picker()
+        return False
 
     def select(self, day):
         self.selected = day
@@ -91,6 +121,7 @@ class CalendarWindow(Gtk.ApplicationWindow):
         return False
 
     def apply(self):
+        self.dismiss_month_picker()
         was_visible = self.get_visible()
         loc = self.app.loc
         repo = self.app.repo
@@ -117,7 +148,11 @@ class CalendarWindow(Gtk.ApplicationWindow):
             b = button(text, lambda d=delta: self.navigate(d), loc.t(key))
             b.set_sensitive(not (self.year == MIN_YEAR and (delta == -12 or self.month == 1)))
             nav.pack_start(b, False, False, 0)
-        b = button(loc.t("today"), self.go_today, loc.t("today"))
+        b = button(loc.t("today"), self.go_today, loc.t("today_help"))
+        b.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        b.connect("button-press-event", self.today_press)
+        b.connect("popup-menu", lambda *_: self.open_month_picker())
+        self.today_button = b
         nav.pack_start(b, True, False, 0)
         for text, delta, key in [("›", 1, "next_month"), ("»", 12, "next_year")]:
             b = button(text, lambda d=delta: self.navigate(d), loc.t(key))

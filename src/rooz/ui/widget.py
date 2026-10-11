@@ -88,7 +88,8 @@ class Card(Gtk.ApplicationWindow):
         self.fixed.set_size_request(w, h)
         self.resize(w, h)
         s = self.layout_scale()
-        self.fixed.move(self.gear, w - round(40 * s), round(10 * s))
+        gear_x = round(10 * s) if self.app.loc.lang == "fa" else w - round(40 * s)
+        self.fixed.move(self.gear, gear_x, round(10 * s))
         self.gear.set_tooltip_text(self.app.loc.t("settings"))
         self.gear.get_accessible().set_name(self.app.loc.t("settings"))
         fg = Gdk.RGBA()
@@ -204,6 +205,22 @@ class Card(Gtk.ApplicationWindow):
             item = Gtk.MenuItem(label=loc.t(key))
             item.connect("activate", lambda _, f=fn: f())
             m.append(item)
+        numeric = Gtk.MenuItem(label=loc.t("copy_numeric"))
+        submenu = Gtk.Menu()
+        submenu.set_direction(m.get_direction())
+        for key, index in [
+            ("copy_persian", 0),
+            ("copy_gregorian", 1),
+            ("copy_hijri", 2),
+            ("copy_all", None),
+        ]:
+            item = Gtk.MenuItem(label=loc.t(key))
+            if index == 2:
+                item.set_sensitive(bool(self.app.repo.hijri(self.app.today)))
+            item.connect("activate", lambda _, i=index: self.app.copy(self.app.today, i, numerical=True))
+            submenu.append(item)
+        numeric.set_submenu(submenu)
+        m.append(numeric)
         for key, setting in [("lock", "locked"), ("above", "always_on_top")]:
             item = Gtk.CheckMenuItem(label=loc.t(key))
             item.set_active(self.cfg["window"][setting])
@@ -215,6 +232,7 @@ class Card(Gtk.ApplicationWindow):
             m.append(item)
         m.show_all()
         m.popup_at_pointer(e)
+        return m
 
     def tooltip(self, _, x, y, keyboard, tip):
         tip.set_text(
@@ -265,6 +283,10 @@ class Card(Gtk.ApplicationWindow):
             desc.set_absolute_size(size * ts * Pango.SCALE)
             desc.set_weight(weight)
             layout.set_font_description(desc)
+            # Edge alignment must not be flipped again by Pango's auto RTL handling.
+            if align != Pango.Alignment.CENTER:
+                layout.set_auto_dir(False)
+                layout.get_context().set_base_dir(Pango.Direction.LTR)
             layout.set_text(str(value), -1)
             layout.set_width(round(width * Pango.SCALE))
             layout.set_ellipsize(Pango.EllipsizeMode.END)
@@ -273,7 +295,11 @@ class Card(Gtk.ApplicationWindow):
             cr.move_to(x, y)
             PangoCairo.show_layout(cr, layout)
 
-        text("روز" if loc.lang == "fa" else "Rooz", 16, 11, 120, 12, "accent_text", 600, Pango.Alignment.LEFT)
+        rtl = loc.lang == "fa"
+        text(
+            "روز" if rtl else "Rooz", 54 if rtl else 16, 11, w / s - 70,
+            12, "accent_text", 600, Pango.Alignment.RIGHT if rtl else Pango.Alignment.LEFT,
+        )
         text(WEEKDAYS[loc.lang][self.app.today.weekday()], 16, 38 * max(1, ts), 288, 11, "muted")
         day = self.app.today
         j = jalali(day)
