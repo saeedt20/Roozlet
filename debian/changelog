@@ -1,3 +1,11 @@
+rooz (0.4.0-1) unstable; urgency=medium
+
+  * Add offline date, occasion and personal-entry search.
+  * Add private notes, birthdays, appointments and tasks with yearly Shamsi recurrence.
+  * Add opt-in desktop notifications with persistent occurrence tracking.
+
+ -- Saeed Taheri <132300919+saeedt20@users.noreply.github.com>  Mon, 12 Oct 2026 13:45:00 +0330
+
 rooz (0.3.1-1) unstable; urgency=medium
 
   * Prevent long credits and license text from enlarging the About window.

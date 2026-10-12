@@ -44,6 +44,11 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.add(self.shell)
         self.header_bar = Gtk.HeaderBar(show_close_button=True)
         self.set_titlebar(self.header_bar)
+        from .icons import NavigationIcon
+        self.search_button = Gtk.Button()
+        self.search_button.add(NavigationIcon("search"))
+        self.search_button.connect("clicked", lambda *_: self.open_search())
+        self.header_bar.pack_end(self.search_button)
         self.compact_menu = Gtk.MenuButton()
         self.compact_menu.set_image(Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.MENU))
         self.compact_menu.set_no_show_all(True)
@@ -58,6 +63,9 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.cells = {}
         self.month_picker = None
         self.about_window = None
+        self.search_window = self.personal_editor = None
+        self.personal_mode = "upcoming"
+        self.personal_view = None
         self.connect("destroy", lambda *_: self.dismiss_month_picker())
         self.apply()
         self.show_all()
@@ -100,6 +108,34 @@ class CalendarWindow(Gtk.ApplicationWindow):
 
     def about_closed(self, *_):
         self.about_window = None
+
+    def open_search(self):
+        from .search_window import SearchWindow
+        if self.search_window is None:
+            self.search_window = SearchWindow(self)
+            self.search_window.connect("destroy", lambda *_: setattr(self, "search_window", None))
+        self.search_window.present()
+        return self.search_window
+
+    def open_personal_editor(self, day, item_id=None):
+        from .personal import PersonalEditor
+        if not getattr(self.app, "personal", None):
+            return None
+        if self.personal_editor is None:
+            self.personal_editor = PersonalEditor(self, day, item_id)
+            self.personal_editor.connect("destroy", lambda *_: setattr(self, "personal_editor", None))
+        self.personal_editor.present()
+        return self.personal_editor
+
+    def personal_on(self, day):
+        from ..personal import PersonalError
+        if not getattr(self.app, "personal", None):
+            return []
+        try:
+            return self.app.personal.on(day)
+        except PersonalError:
+            self.app.personal_error = True
+            return []
 
     def navigate(self, delta):
         self.year, self.month = shift_month(self.year, self.month, delta)
@@ -146,6 +182,8 @@ class CalendarWindow(Gtk.ApplicationWindow):
     def select(self, day):
         self.view = "calendar"
         self.selected = day
+        j = jalali(day)
+        self.year, self.month = j.year, j.month
         self.apply()
         self.focus_selected()
 
@@ -155,6 +193,13 @@ class CalendarWindow(Gtk.ApplicationWindow):
 
     def key(self, _, event):
         k = event.keyval
+        if getattr(event, "state", 0) & Gdk.ModifierType.CONTROL_MASK:
+            if k in (Gdk.KEY_f, Gdk.KEY_F, Gdk.KEY_k, Gdk.KEY_K):
+                self.open_search()
+                return True
+            if k in (Gdk.KEY_n, Gdk.KEY_N):
+                self.open_personal_editor(self.selected)
+                return True
         if k == Gdk.KEY_Escape:
             if self.month_picker:
                 self.dismiss_month_picker()
@@ -199,6 +244,8 @@ class CalendarWindow(Gtk.ApplicationWindow):
         title_text = "روزلت · تقویم" if rtl else "Roozlet · Calendar"
         self.set_title(title_text)
         self.header_bar.set_title(title_text)
+        self.search_button.set_tooltip_text(loc.t("search") + " · Ctrl+F")
+        self.search_button.get_accessible().set_name(loc.t("search"))
         self.shell.set_direction(Gtk.TextDirection.LTR)
         self.shell.reorder_child(self.sidebar, 1 if rtl else 0)
         clear(self.sidebar)
@@ -207,6 +254,8 @@ class CalendarWindow(Gtk.ApplicationWindow):
         actions = [("calendar", "x-office-calendar-symbolic", lambda: self.show_view("calendar")),
                    ("today", "go-jump-symbolic", self.go_today),
                    ("occasions", "view-list-symbolic", lambda: self.show_view("occasions")),
+                   ("search", "edit-find-symbolic", self.open_search),
+                   ("personal", "accessories-text-editor-symbolic", lambda: self.show_view("personal")),
                    ("settings", "emblem-system-symbolic", self.app.open_settings),
                    ("about", "help-about-symbolic", self.show_about)]
         popup = Gtk.Menu()
@@ -265,8 +314,13 @@ class CalendarWindow(Gtk.ApplicationWindow):
         direction(self.hero.content, rtl)
         self.body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self.cells = {}
+        self.personal_view = None
         if self.view == "occasions":
             self.build_occasions(first, last)
+        elif self.view == "personal":
+            from .personal import PersonalView
+            self.personal_view = PersonalView(self)
+            self.body.pack_start(self.personal_view, False, False, 0)
         else:
             self.build_calendar()
         direction(self.body, rtl)
@@ -310,6 +364,10 @@ class CalendarWindow(Gtk.ApplicationWindow):
             all_events = repo.events(cell.day)
             visible = repo.visible(cell.day, cfg["events"])
             markers = "◆" if holiday else "•" if visible else ""
+            personal = getattr(self.app, "personal", None)
+            personal_entries = self.personal_on(cell.day) if personal else []
+            if personal_entries:
+                markers += " ◇"
             secondary = (
                 loc.n(cell.day.day) + " " if cfg["calendar"]["show_gregorian_cell_numbers"] else ""
             ) + markers
@@ -332,6 +390,7 @@ class CalendarWindow(Gtk.ApplicationWindow):
                 + " · ".join(tags)
                 + "\n"
                 + "\n".join(loc.event_title(e) for e in all_events)
+                + ("\n" + loc.t("personal") + ": " + " · ".join(o.item["title"] for o in personal_entries) if personal_entries else "")
             )
             b.set_tooltip_text(tip)
             b.get_accessible().set_name(tip)
@@ -393,6 +452,9 @@ class CalendarWindow(Gtk.ApplicationWindow):
             item = label(prefix + " · " + loc.event_title(event), "holiday" if event["is_public_holiday"] else None, wrap=True)
             item.set_selectable(True)
             details.pack_start(item, False, False, 0)
+        from .personal import PersonalView
+        self.personal_view = PersonalView(self, compact=True)
+        self.body.pack_start(self.personal_view, False, False, 0)
 
     def build_occasions(self, first, last):
         loc, repo, cfg = self.app.loc, self.app.repo, self.app.cfg

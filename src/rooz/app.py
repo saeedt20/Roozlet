@@ -4,6 +4,7 @@ import argparse
 import copy
 import json
 import sys
+from datetime import datetime, timezone
 
 from . import __version__
 from .calendar_service import Clock
@@ -15,7 +16,7 @@ from .i18n import Localizer
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="rooz", description="Roozlet — Persian calendar for Xfce")
     group = parser.add_mutually_exclusive_group()
-    for command in ("widget", "calendar", "settings", "reset-position", "quit", "check-data", "version"):
+    for command in ("widget", "calendar", "search", "personal", "settings", "reset-position", "quit", "check-data", "version"):
         group.add_argument("--" + command, action="store_true")
     args = parser.parse_args(argv)
     if args.version:
@@ -62,6 +63,8 @@ def main(argv=None):
     from .ui.calendar_window import CalendarWindow
     from .ui.settings import Settings
     from .ui.widget import Card
+    from .personal import PersonalStore, PersonalError, ReminderEngine, Occurrence
+    from .notifications import DesktopNotifier
 
     class App(Gtk.Application):
         def __init__(self):
@@ -71,6 +74,11 @@ def main(argv=None):
             self.card = self.calendar = self.settings = None
             self.timer = 0
             self.initialized = False
+            self.personal = None
+            self.personal_error = False
+            self.last_deleted = None
+            self.notification_available = None
+            self.notifier = self.reminders = None
 
         @property
         def cfg(self):
@@ -85,6 +93,14 @@ def main(argv=None):
             self.clock = Clock(self.cfg["timezone"])
             self.clock.reconcile()
             self.today = self.clock.day
+            try:
+                self.personal = PersonalStore()
+            except (PersonalError, OSError):
+                self.personal_error = True
+            self.notifier = DesktopNotifier(lambda: self.cfg, lambda: self.loc, self.open_notification,
+                                            self.notification_status, self.notification_eligible)
+            if self.personal:
+                self.reminders = ReminderEngine(self.personal, self.notifier.send, self.personal_failed)
             self.font_warnings = fonts.load()
             self.provider = Gtk.CssProvider()
             Gtk.StyleContext.add_provider_for_screen(
@@ -94,6 +110,7 @@ def main(argv=None):
             self.card = Card(self)
             self.timer = GLib.timeout_add_seconds(30, self.reconcile)
             self.initialized = True
+            self.check_reminders()
 
         def do_command_line(self, command):
             incoming = parser.parse_args(command.get_arguments()[1:])
@@ -109,6 +126,10 @@ def main(argv=None):
                 return 1
             if incoming.settings:
                 self.open_settings()
+            elif incoming.search:
+                self.open_search()
+            elif incoming.personal:
+                self.open_personal()
             elif incoming.reset_position:
                 self.reset_position()
             elif incoming.calendar or was_running and not incoming.widget:
@@ -133,6 +154,59 @@ def main(argv=None):
             self.settings.show()
             self.settings.present()
 
+        def open_search(self):
+            self.open_calendar()
+            self.calendar.open_search()
+
+        def open_personal(self):
+            self.open_calendar()
+            self.calendar.show_view("personal")
+
+        def open_notification(self, day):
+            self.open_calendar()
+            self.calendar.select(day)
+
+        def notification_status(self, value):
+            self.notification_available = value
+            if self.calendar and self.calendar.personal_view:
+                self.calendar.personal_view.update_status()
+            if self.settings:
+                self.settings.update_notification_status()
+
+        def notification_eligible(self, occurrence):
+            if occurrence.item["id"] == "test":
+                return True
+            if not self.personal:
+                return False
+            try:
+                item = self.personal.get(occurrence.item["id"])
+                return bool(item and item["notify"] and all(item[k] == occurrence.item[k] for k in ("day", "time", "repeat"))
+                            and not any(self.personal.state(item["id"], occurrence.day)))
+            except PersonalError:
+                self.personal_failed()
+                return False
+
+        def personal_failed(self):
+            self.personal_error = True
+            if self.calendar and self.calendar.personal_view:
+                self.calendar.personal_view.show_data_error()
+
+        def personal_changed(self):
+            self.personal_error = False
+            self.refresh()
+            self.check_reminders()
+
+        def check_reminders(self):
+            if self.reminders:
+                self.reminders.tick(datetime.now(timezone.utc), self.cfg["timezone"],
+                                    self.cfg["personal"]["notifications_enabled"])
+
+        def test_notification(self):
+            if self.cfg["personal"]["notifications_enabled"]:
+                item = {"id": "test", "title": "Roozlet", "body": self.loc.t("test_notification_body"),
+                        "time": "09:00", "notify": True, "repeat": "none", "kind": "note"}
+                self.notifier.send(Occurrence(item, self.today), lambda _: None)
+
         def save(self):
             self.config.save()
             self.loc = Localizer(self.cfg)
@@ -148,6 +222,8 @@ def main(argv=None):
             self.clock.reconcile()
             self.today = self.clock.day
             self.refresh(rebuild_calendar=section != "appearance" or self.today != previous_day)
+            if section == "personal" or key == "timezone":
+                self.check_reminders()
             if self.settings and key in ("language", "digits", "font_mode", "custom_font_family"):
                 GLib.idle_add(self.rebuild_settings)
 
@@ -165,6 +241,9 @@ def main(argv=None):
                     self.calendar.apply()
                 else:
                     self.calendar.refresh_appearance()
+                for window in (self.calendar.search_window, self.calendar.personal_editor):
+                    if window:
+                        window.refresh_locale()
             if self.settings:
                 self.settings.refresh_appearance()
 
@@ -172,6 +251,7 @@ def main(argv=None):
             if self.clock.reconcile():
                 self.today = self.clock.day
                 self.refresh()
+            self.check_reminders()
             return True
 
         def copy(self, day, index, numerical=None):
@@ -197,6 +277,10 @@ def main(argv=None):
             if self.timer:
                 GLib.source_remove(self.timer)
                 self.timer = 0
+            if self.notifier:
+                self.notifier.close()
+            if self.personal:
+                self.personal.close()
             Gtk.Application.do_shutdown(self)
 
     app = App()

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — 2026-10-12
+
+- Offline Shamsi/Gregorian date, bilingual occasion and personal-entry search with digit/letter normalization and direct month jumps.
+- Private notes, birthdays, appointments and tasks with explicit save, editing, per-occurrence completion and reversible deletion.
+- One-time/daily/weekly/Shamsi-yearly recurrence and documented Esfand leap-day handling.
+- Opt-in asynchronous desktop notifications, 24-hour catch-up, bounded batches, failure retry and durable delivery deduplication.
+- Bilingual native search/editor/list controls, calendar markers, launcher actions and --search/--personal commands.
+- Preserve verified annual data, centered widget, appearance, startup choice and package identity; document readable /tmp installation.
+
 ## 0.3.1 — 2026-10-12
 
 - Replace the overflowing stock About dialog with bounded, scrolling About/Credits/Licenses pages.

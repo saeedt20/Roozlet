@@ -303,6 +303,14 @@ class Settings(Gtk.ApplicationWindow):
             self.sections["desktop"].pack_start(label(loc.t("startup_help"), "muted", wrap=True), False, False, 0)
         startup.connect("notify::active", self.startup)
         row(desktop, "startup", startup)
+        reminders = group(self.sections["desktop"])
+        self.notification_switch = toggle(reminders, "desktop_notifications", "personal", "notifications_enabled", "reminder_runtime")
+        self.notification_test = button(loc.t("test_notification"), self.app.test_notification)
+        self.notification_test.set_sensitive(cfg["personal"]["notifications_enabled"])
+        self.sections["desktop"].pack_start(self.notification_test, False, False, 0)
+        self.notification_status_label = label("", "muted", wrap=True)
+        self.sections["desktop"].pack_start(self.notification_status_label, False, False, 0)
+        self.update_notification_status()
         for key, field in (("lock", "locked"), ("above", "always_on_top"), ("all_workspaces", "all_workspaces")):
             toggle(desktop, key, "window", field)
         self.sections["desktop"].pack_start(button(loc.t("reset_position"), self.app.reset_position), False, False, 0)
@@ -333,6 +341,8 @@ class Settings(Gtk.ApplicationWindow):
             return
         cfg = self.app.cfg
         self.building = True
+        self.notification_switch.set_active(cfg["personal"]["notifications_enabled"])
+        self.notification_test.set_sensitive(cfg["personal"]["notifications_enabled"])
         style_window(self, cfg, self.app.today)
         self.auto_switch.set_active(cfg["appearance"]["season"] == "auto")
         season = effective_season(cfg, self.app.today)
@@ -356,6 +366,13 @@ class Settings(Gtk.ApplicationWindow):
             self.stack.set_transition_type(Gtk.StackTransitionType.NONE)
             self.stack.set_transition_duration(0)
         self.building = False
+
+    def update_notification_status(self):
+        if not hasattr(self, "notification_status_label"):
+            return
+        value = getattr(self.app, "notification_available", None)
+        self.notification_status_label.set_text(self.app.loc.t("notification_sent") if value is True else
+                                                self.app.loc.t("notification_unavailable") if value is False else "")
 
     def automatic(self, b, _):
         if not self.building:

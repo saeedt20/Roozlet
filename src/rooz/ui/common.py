@@ -51,7 +51,8 @@ def navigation_item(text, icon, callback, rtl=False):
     names = {"x-office-calendar-symbolic":"calendar", "go-jump-symbolic":"today",
              "view-list-symbolic":"occasions", "emblem-system-symbolic":"settings",
              "help-about-symbolic":"about", "preferences-desktop-theme-symbolic":"appearance",
-             "preferences-desktop-locale-symbolic":"dates", "preferences-system-symbolic":"desktop"}
+             "preferences-desktop-locale-symbolic":"dates", "preferences-system-symbolic":"desktop",
+             "edit-find-symbolic":"search", "accessories-text-editor-symbolic":"personal"}
     row.pack_start(NavigationIcon(names.get(icon, "about")), False, False, 0)
     title = label(text, align=1 if rtl else 0, wrap=True)
     title.set_max_width_chars(19)

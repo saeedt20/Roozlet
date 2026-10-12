@@ -103,6 +103,14 @@ class NavigationIcon:
                     cr.move_to(x, y) if i == 0 else cr.line_to(x, y)
                 cr.close_path(); cr.stroke()
                 cr.arc(9, 9, 2.2, 0, math.tau); cr.stroke()
+            elif name == "search":
+                cr.arc(7.5, 7.5, 4.5, 0, math.tau)
+                cr.move_to(11, 11); cr.line_to(15.5, 15.5); cr.stroke()
+            elif name == "personal":
+                cr.rectangle(3, 2, 12, 14)
+                for y in (6, 9, 12):
+                    cr.move_to(6, y); cr.line_to(12, y)
+                cr.stroke()
             elif name == "about":
                 cr.arc(9, 9, 6, 0, math.tau); cr.stroke()
                 cr.move_to(9, 8); cr.line_to(9, 12); cr.stroke()

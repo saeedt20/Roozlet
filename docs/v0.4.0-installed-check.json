@@ -1,0 +1,20 @@
+{
+  "version": "0.4.0",
+  "environment": "Extracted Debian package from /tmp, temporary XDG profile, private GTK X11 and synthetic freedesktop notification server",
+  "passed": 12,
+  "checks": [
+    "Installed version and source-independent paths",
+    "Real search activates cross-month date",
+    "Save error keeps the live draft",
+    "Real editor saved daily recurrence and refreshed marker",
+    "Notifications default off with no service calls",
+    "Real delete and undo preserve reminder identity",
+    "Real notification switch enables coordinator",
+    "Real coordinator delivered through session-bus Notify",
+    "Repeated reminder poll does not duplicate delivery",
+    "Notification date action opens correct calendar month",
+    "Independent reopen sees saved item and delivery ledger",
+    "Notification opt-out persists in validated config"
+  ],
+  "limitations": "No native Mint apt/login/resume/physical monitor or actual Xfce notification presentation claim."
+}

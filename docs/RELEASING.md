@@ -2,7 +2,7 @@
 
 The authoritative application version is `src/rooz/__init__.py`; the Debian
 changelog must match it with revision `-1`. Current artifact:
-`dist/roozlet_0.3.1-1_all.deb`.
+`dist/roozlet_0.4.0-1_all.deb`.
 
 ```
 sudo apt install python3 python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 tzdata libfontconfig1
@@ -37,9 +37,9 @@ documentation use the MIT license selected by the owner. Copyright and Debian
 maintainer attribution are Saeed Taheri; the public GitHub noreply address is
 used rather than a personal email. Third-party licenses stay unchanged.
 
-The GitHub project and release downloads use the Roozlet name. Version 0.3.1 uses
+The GitHub project and release downloads use the Roozlet name. Version 0.4.0 uses
 the visible Roozlet / روزلت name and retains the established `rooz` CLI/package, so the new
-`roozlet_0.3.1-1_all.deb` upgrades existing installations normally.
+`roozlet_0.4.0-1_all.deb` upgrades existing installations normally.
 The original University PDF is excluded from source archives; retrieve it using
 its provenance URL for re-verification. Never add real XDG user settings,
 unrelated desktop captures, credentials or runtime logs.
@@ -57,12 +57,12 @@ For an explicitly authorized release, build and verify the artifacts, commit the
 reviewed source, and wait for CI to pass. Then publish the tag and assets:
 
 ```sh
-git tag -a v0.3.1 -m "Roozlet 0.3.1"
-git push origin v0.3.1
-gh release create v0.3.1 --repo saeedt20/Roozlet --verify-tag \
-  --title "Roozlet 0.3.1 — Persian calendar for Xfce" \
-  --notes-file docs/releases/v0.3.1.md \
-  dist/roozlet_0.3.1-1_all.deb dist/roozlet-0.3.1-source.tar.gz dist/SHA256SUMS
+git tag -a v0.4.0 -m "Roozlet 0.4.0"
+git push origin v0.4.0
+gh release create v0.4.0 --repo saeedt20/Roozlet --verify-tag \
+  --title "Roozlet 0.4.0 — Persian calendar for Xfce" \
+  --notes-file docs/releases/v0.4.0.md \
+  dist/roozlet_0.4.0-1_all.deb dist/roozlet-0.4.0-source.tar.gz dist/SHA256SUMS
 ```
 
 Download the published assets and check their SHA256SUMS. Verify checksums before

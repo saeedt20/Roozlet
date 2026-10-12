@@ -14,7 +14,17 @@ Categories=Office;Calendar;
 Keywords=Persian;Jalali;Iran;Calendar;
 StartupNotify=false
 StartupWMClass=Rooz
-Actions=Calendar;Settings;
+Actions=Calendar;Search;Personal;Settings;
+
+[Desktop Action Search]
+Name=Search dates and occasions
+Name[fa]=جستجوی تاریخ و مناسبت
+Exec=rooz --search
+
+[Desktop Action Personal]
+Name=Notes and reminders
+Name[fa]=یادداشت و یادآور
+Exec=rooz --personal
 
 [Desktop Action Calendar]
 Name=Open calendar

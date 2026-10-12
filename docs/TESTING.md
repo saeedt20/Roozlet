@@ -4,6 +4,52 @@ The original 0.1.0 tests were performed on Linux Mint 22.3 Xfce/X11 with Python 
 PyGObject 3.48.2, Cairo 1.25.1, Xfwm4 4.18.0, Fontconfig 2.15.0 and Poppler 24.02.0.
 Only application window captures belong in docs/screenshots.
 
+## 0.4.0 search/personal reminders — 12 October 2026
+
+- All **83 tests** passed: 47 logic/data checks, 30 native GTK checks and six
+  notification protocol checks. The complete suite also passed at 200% scale,
+  including large-font bilingual popup bounds, in isolated virtual X11.
+- Pure checks cover three digit styles, named/numerical dates, invalid/out-of-range
+  rejection, cross-language search, personal-body search, limits, private SQLite
+  permissions, durable reopen, transactional write failure, reversible delete,
+  one-time/daily/weekly/Shamsi-yearly recurrence and per-occurrence completion.
+- Reminder checks cover timezone conversion, 24-hour grace, future/missed times,
+  first DST fold and spring gaps, opt-in, in-flight suppression, retry, accepted
+  delivery persistence and edits racing an old pending delivery.
+- Native UI checks exercise Ctrl+F, actual result activation across months,
+  note save/edit/calendar markers, complete/delete/undo buttons, birthday defaults,
+  explicit notification opt-in, date-calendar conversion, invalid times, dirty
+  draft handling, callback cleanup and a personal-read failure leaving official
+  calendar browsing usable.
+- Native asynchronous freedesktop calls are checked against a synthetic private
+  D-Bus service: GetCapabilities, escaped/plain bodies, optional actions, action
+  date routing, close signals, opt-out during connection, cancellation and error
+  propagation. No test sends reminders to the user's real desktop service.
+- The extracted .deb ran from /tmp with a temporary XDG profile. All 12 real App
+  checks passed: search/month jump, editor persistence, saved recurrence/markers,
+  draft retained on forced write failure, default-off notifications, delete/undo,
+  actual notification settings, coordinator Notify, no duplicate poll, date
+  action, independent database reopen and durable opt-out. See
+  v0.4.0-installed-check.json.
+- Ten actual native GTK captures use synthetic demonstration entries only:
+  Persian dark and English light search, editor, personal list, calendar and
+  notification preferences. They were visually reviewed; no user notes or other
+  desktop windows were captured.
+- A 35.01-second fresh widget-only idle observation used 76,408–76,412 KiB RSS
+  (about 74.62 MiB) and 0.0006 seconds process CPU (0.002% of one core).
+  See v0.4.0-resource-check.json; this is a short virtual-X11 observation.
+- Annual data is unchanged and validation reports no issues: 365 date mappings,
+  305 occasions, 26 statutory holiday dates. Personal entries stay separate.
+- The readable /tmp installation instructions avoid the private-home `_apt` notice.
+  Rootless package builds are checked for byte-identical output, source/archive
+  checksums and exclusion of SQLite database/journal files from publications.
+
+Native Mint apt upgrade/removal, real login/suspend/overnight transitions, physical
+monitor changes and actual Xfce notification presentation were not repeated. The
+protocol checks certify the private service exchange, not every desktop's popup
+presentation or do-not-disturb policy. Notification service acceptance is reported
+accurately. See [PERSONAL.md](PERSONAL.md) for exact runtime and recurrence rules.
+
 ## 0.3.1 About/Credits overflow — 12 October 2026
 
 - All **54 tests** passed: 31 logic/data checks and 23 native GTK checks.

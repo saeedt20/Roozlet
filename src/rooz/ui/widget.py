@@ -245,6 +245,8 @@ class Card(Gtk.ApplicationWindow):
         m.set_direction(Gtk.TextDirection.RTL if loc.lang == "fa" else Gtk.TextDirection.LTR)
         for key, fn in [
             ("open", self.app.open_calendar),
+            ("search", self.app.open_search),
+            ("personal", self.app.open_personal),
             ("settings", self.app.open_settings),
             ("copy_persian", lambda: self.app.copy(self.app.today, 0)),
             ("copy_gregorian", lambda: self.app.copy(self.app.today, 1)),

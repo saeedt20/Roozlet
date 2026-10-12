@@ -7,6 +7,9 @@ dist/
 .pytest_cache/
 docs/sources/Calendar-1405.pdf
 *.deb
+*.sqlite*
+*.db
+*.db-*
 *.buildinfo
 *.changes
 *.dsc

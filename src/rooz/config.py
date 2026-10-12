@@ -40,6 +40,7 @@ DEFAULTS = {
         "visible_categories": ["national", "cultural", "religious", "international"],
         "show_public_holidays": True,
     },
+    "personal": {"notifications_enabled": False},
     "window": {
         "monitor": "primary",
         "position": None,
@@ -68,7 +69,7 @@ def validate(raw):
     }.items():
         if raw.get(k) in vals:
             cfg[k] = raw[k]
-    for section in ("appearance", "calendar", "events", "window"):
+    for section in ("appearance", "calendar", "events", "window", "personal"):
         values = raw.get(section, {})
         if not isinstance(values, dict):
             continue
