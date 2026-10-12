@@ -11,7 +11,6 @@ from ..formatting import full_date
 from ..i18n import GMONTHS, HMONTHS, JMONTHS, WEEKDAYS
 from ..position import place
 from .theme import rgb, tokens, style_window
-from .artwork import paint
 from .icons import seasonal
 
 
@@ -36,6 +35,8 @@ class Card(Gtk.ApplicationWindow):
         self.fixed = Gtk.Fixed()
         self.add(self.fixed)
         self.canvas = Gtk.DrawingArea()
+        from .motion import ArtworkTransition
+        self.artwork_transition = ArtworkTransition(self.canvas, app.cfg)
         self.fixed.put(self.canvas, 0, 0)
         self.canvas.add_events(
             Gdk.EventMask.BUTTON_PRESS_MASK
@@ -115,6 +116,9 @@ class Card(Gtk.ApplicationWindow):
 
     def apply(self):
         style_window(self, self.cfg, self.app.today)
+        t = tokens(self.cfg, self.app.today)
+        self.artwork_transition.cfg = self.cfg
+        self.artwork_transition.set_scene(t["season"] if t["seasonal"] and self.cfg["appearance"]["show_artwork"] else None)
         self.set_title("روزلت · ویجت" if self.app.loc.lang == "fa" else "Roozlet · Widget")
         w, h = self.dimensions()
         self.canvas.set_size_request(w, h)
@@ -229,6 +233,7 @@ class Card(Gtk.ApplicationWindow):
         return False
 
     def cleanup(self, *_):
+        self.artwork_transition.stop()
         if self.position_timer:
             GLib.source_remove(self.position_timer)
             self.position_timer = 0
@@ -318,7 +323,7 @@ class Card(Gtk.ApplicationWindow):
         cr.set_source_rgba(*rgb(t["bg"]), opacity)
         cr.paint()
         if t["seasonal"] and a["show_artwork"]:
-            paint(cr, t["season"], w, h, a["artwork_intensity"]*.58)
+            self.artwork_transition.paint(cr, w, h, a["artwork_intensity"]*.58)
             shade = cairo.LinearGradient(0, 0, 0, h)
             shade.add_color_stop_rgba(0, *rgb(t["bg"]), .15)
             shade.add_color_stop_rgba(.32, *rgb(t["bg"]), .75)

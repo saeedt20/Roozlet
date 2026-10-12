@@ -1,0 +1,20 @@
+{
+  "version": "0.3.0",
+  "environment": "Private GTK3 virtual X11; extracted Debian paths launched from /tmp with temporary XDG profile",
+  "checks": [
+    "Installed version 0.3.0 and source-independent resources",
+    "Real language combo applies English LTR",
+    "Color-mode buttons keep the chosen mode selected",
+    "Persistent seasonal preview changes through real callback",
+    "Custom accent survives validated config replacement",
+    "Font chooser selects custom mode on current config",
+    "Live intensity keeps existing native date cells",
+    "Copy date menu writes actual numerical GTK clipboard",
+    "Month-title picker selects real Farvardin",
+    "Native occasion filter persists",
+    "Motion off stops scene callbacks and persists",
+    "Unverified Hijri copy is disabled"
+  ],
+  "passed": 12,
+  "limitations": "No native Mint apt install/upgrade, login, suspend or physical hotplug claim."
+}

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 — 2026-10-12
+
+- Scenic calendar header, lighter date grid and a compact selected-day card with Copy date menu.
+- Grouped preferences with mirrored sidebar, live current-date widget preview and advanced controls.
+- Persian RTL and English LTR navigation and month grids, with matching keyboard direction.
+- Consistent native outline icons and theme-colored controls.
+- Short scene/content fades, opt-out preference and native reduced-motion support; no idle animation.
+- Existing widget, verified data, fonts, numerical dates, startup choice and installation identities preserved.
+
 ## 0.2.0 — 2026-10-11
 
 - Four bundled seasonal scenes and scalable icons; automatic/manual seasons, dark/light and custom accent controls.

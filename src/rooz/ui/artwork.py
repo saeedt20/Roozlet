@@ -1,6 +1,8 @@
 """Offline, bounded scenic image loading shared by the card and native panels."""
 
 from functools import lru_cache
+import math
+import cairo
 
 from gi.repository import Gdk, GdkPixbuf, GLib, Gtk
 
@@ -47,13 +49,44 @@ def paint(cr, season, width, height, alpha=1.0):
 
 
 class ScenicBand(Gtk.DrawingArea):
-    def __init__(self, season, height=100, intensity=0.65):
+    def __init__(self, season, height=100, intensity=0.65, cfg=None, shade=False):
         super().__init__()
         self.season, self.intensity = season, intensity
+        self.shade = shade
+        self.transition = None
+        if cfg:
+            from .motion import ArtworkTransition
+            self.transition = ArtworkTransition(self, cfg)
+            self.transition.set_scene(season)
         self.set_size_request(-1, height)
         self.connect("draw", self.draw)
 
+    def update(self, season, intensity):
+        self.season, self.intensity = season, intensity
+        if self.transition:
+            self.transition.set_scene(season)
+        self.queue_draw()
+
     def draw(self, _, cr):
         allocation = self.get_allocation()
-        paint(cr, self.season, allocation.width, allocation.height, self.intensity)
+        width, height = allocation.width, allocation.height
+        cr.save()
+        radius = min(12, width / 2, height / 2)
+        for x, y, start in ((width-radius, radius, -math.pi/2),
+                            (width-radius, height-radius, 0),
+                            (radius, height-radius, math.pi/2), (radius, radius, math.pi)):
+            cr.arc(x, y, radius, start, start + math.pi/2)
+        cr.close_path()
+        cr.clip()
+        if self.transition:
+            self.transition.paint(cr, width, height, self.intensity)
+        elif self.season:
+            paint(cr, self.season, width, height, self.intensity)
+        if self.shade and self.season:
+            gradient = cairo.LinearGradient(0, 0, 0, height)
+            gradient.add_color_stop_rgba(0, .04, .07, .11, .20)
+            gradient.add_color_stop_rgba(1, .04, .07, .11, .86)
+            cr.set_source(gradient)
+            cr.paint()
+        cr.restore()
         return False

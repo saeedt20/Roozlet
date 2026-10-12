@@ -47,7 +47,7 @@ PAIRS = {
     "close": ("Close", "بستن"),
     "appearance": ("Appearance", "ظاهر"),
     "dates": ("Language & dates", "زبان و تاریخ"),
-    "events": ("Events", "مناسبت‌ها"),
+    "events": ("Occasions", "مناسبت‌ها"),
     "desktop": ("Desktop & startup", "میزکار و راه‌اندازی"),
     "accent": ("Accent color", "رنگ تأکید"),
     "timezone": ("Timezone", "منطقهٔ زمانی"),
@@ -147,6 +147,14 @@ SHORT_WEEK = {
 
 
 PAIRS.update({
+    'appearance_intro': ('Make Roozlet feel like home.', 'روزلت را به سلیقهٔ خود تنظیم کنید.'),
+    'widget_preview': ('Live widget preview', 'پیش‌نمایش زندهٔ ویجت'),
+    'season_help': ('Follow today’s Persian season.', 'ظاهر مطابق فصل فعلی تقویم شمسی تغییر می‌کند.'),
+    'color_mode': ('Color mode', 'حالت نمایش'),
+    'advanced': ('Advanced settings', 'تنظیمات پیشرفته'),
+    'motion_effects': ('Subtle transitions', 'حرکت‌های ملایم'),
+    'motion_help': ('Short fades; respects the system animation setting.', 'محو شدن کوتاه؛ مطابق تنظیمات حرکت سیستم.'),
+    'copy_date': ('Copy date', 'کپی تاریخ'),
     'style': ('Appearance style', 'سبک ظاهر'),
     'seasonal': ('Seasonal', 'فصلی'),
     'classic': ('Classic', 'ساده'),
