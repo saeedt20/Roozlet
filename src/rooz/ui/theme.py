@@ -117,6 +117,10 @@ def apply(cfg, provider, today=None):
         .rooz scale slider {{ background:{t["accent"]}; border:none; min-width:12px; min-height:12px; box-shadow:none; }}
         .rooz menu {{ background:{t["bg"]}; color:{t["fg"]}; }}
         .rooz menuitem:hover {{ background:alpha({t["accent"]},.15); }}
+        .rooz textview,.rooz textview text {{ background:{panel}; color:{t["fg"]}; }}
+        .rooz .about-tabs button {{ padding:6px 8px; min-width:0; }}
+        .rooz .about-tabs button:checked {{ background:alpha({t["accent"]},.17); }}
+        .rooz .about-tabs button:checked label {{ color:{t["accent_text"]}; }}
         window.rooz-card {{ background:transparent; }}
         .rooz-card button {{ background:transparent; border:none; box-shadow:none; padding:0; min-width:24px; min-height:24px; }}
         .rooz-card button.occasion {{ font-size:10.5px; padding:0; }}

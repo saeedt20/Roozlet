@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1 — 2026-10-12
+
+- Replace the overflowing stock About dialog with bounded, scrolling About/Credits/Licenses pages.
+- Wrap long attribution text and localize headings, actions and RTL/LTR independently of system locale.
+- Explicit GitHub and issue links, native app mark and complete offline original licenses.
+- Preserve package identity, widget layout, preferences, seasonal UI and calendar data.
+
 ## 0.3.0 — 2026-10-12
 
 - Scenic calendar header, lighter date grid and a compact selected-day card with Copy date menu.
