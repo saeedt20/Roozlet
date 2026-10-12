@@ -1,3 +1,5 @@
+> **0.3.0 update:** [UI_0.3.md](UI_0.3.md) supersedes older calendar/settings layout and motion rules. Persian uses RTL, English uses LTR including weekday columns, with Saturday first in both. All accuracy, offline and compatibility rules remain applicable.
+
 > **0.2.0 update:** visible branding is Roozlet / روزلت; the centered Shamsi layout, four seasonal themes, and adaptive shell are specified in [SEASONAL_UI_REDESIGN.md](SEASONAL_UI_REDESIGN.md) and implemented as described in [DESIGN.md](DESIGN.md). Older appearance/order/dimension descriptions below are historical. Accuracy, offline behavior and compatibility requirements remain applicable.
 
 # Rooz — روز

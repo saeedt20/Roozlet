@@ -143,11 +143,12 @@ def main(argv=None):
             else:
                 self.cfg[key] = value
             self.save()
+            previous_day = self.today
             self.clock.zone = self.cfg["timezone"]
             self.clock.reconcile()
             self.today = self.clock.day
-            self.refresh()
-            if self.settings and key in ("language", "digits", "font_mode", "custom_font_family", "style", "season", "accent_source"):
+            self.refresh(rebuild_calendar=section != "appearance" or self.today != previous_day)
+            if self.settings and key in ("language", "digits", "font_mode", "custom_font_family"):
                 GLib.idle_add(self.rebuild_settings)
 
         def rebuild_settings(self):
@@ -155,14 +156,17 @@ def main(argv=None):
                 self.settings.apply()
             return False
 
-        def refresh(self):
+        def refresh(self, rebuild_calendar=True):
             theme.apply(self.cfg, self.provider, self.today)
             if self.card:
                 self.card.apply()
             if self.calendar:
-                self.calendar.apply()
+                if rebuild_calendar:
+                    self.calendar.apply()
+                else:
+                    self.calendar.refresh_appearance()
             if self.settings:
-                theme.style_window(self.settings, self.cfg, self.today)
+                self.settings.refresh_appearance()
 
         def reconcile(self):
             if self.clock.reconcile():

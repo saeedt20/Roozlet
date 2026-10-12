@@ -21,6 +21,7 @@ DEFAULTS = {
         "show_artwork": True,
         "artwork_intensity": 0.65,
         "calendar_follow_viewed_month": False,
+        "motion_effects": True,
         "accent_color": "#5FE3AF",
         "background_opacity": 0.9,
         "widget_scale": 1.0,

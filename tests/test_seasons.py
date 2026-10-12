@@ -79,3 +79,17 @@ class SeasonTests(unittest.TestCase):
             asset = root / entry["file"]
             self.assertTrue(asset.is_file(), season)
             self.assertEqual(entry["sha256"], hashlib.sha256(asset.read_bytes()).hexdigest())
+
+    def test_motion_preference_is_additive_validated_and_persistent(self):
+        self.assertTrue(validate({})["appearance"]["motion_effects"])
+        old = {"appearance": {"style": "seasonal", "season": "winter", "accent_color": "#123456"}}
+        self.assertTrue(validate(old)["appearance"]["motion_effects"])
+        old["appearance"]["motion_effects"] = False
+        self.assertFalse(validate(old)["appearance"]["motion_effects"])
+        with tempfile.TemporaryDirectory() as folder:
+            config = Config(Path(folder) / "config.json")
+            config.value = validate(old)
+            config.save()
+            self.assertFalse(Config(config.path).value["appearance"]["motion_effects"])
+        old["appearance"]["motion_effects"] = "false"
+        self.assertTrue(validate(old)["appearance"]["motion_effects"])

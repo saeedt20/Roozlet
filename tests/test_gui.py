@@ -1,6 +1,6 @@
 """GTK smoke checks; run on a real or virtual display in an isolated D-Bus session."""
 
-import copy, os, unittest
+import copy, os, time, unittest
 from datetime import date
 from types import SimpleNamespace
 import gi
@@ -218,21 +218,10 @@ class GuiTests(unittest.TestCase):
         self.assertIn("1405/7/18", self.tip)
         self.assertIn("2026/10/10", self.tip)
         settings = self.window(Settings)
-        switches = []
-
-        def find_switches(widget):
-            if isinstance(widget, Gtk.Box):
-                children = widget.get_children()
-                if any(isinstance(c, Gtk.Label) and c.get_text() == self.app.loc.t("numerical_dates") for c in children):
-                    switches.extend(c for c in children if isinstance(c, Gtk.Switch))
-            if isinstance(widget, Gtk.Container):
-                for child in widget.get_children():
-                    find_switches(child)
-
-        find_switches(settings)
-        self.assertEqual(1, len(switches))
-        self.assertTrue(switches[0].get_active())
-        switches[0].set_active(False)
+        settings.show_page("dates")
+        preference = settings.controls["calendar", "prefer_numerical_dates"]
+        self.assertTrue(preference.get_active())
+        preference.set_active(False)
         self.assertFalse(self.app.cfg["calendar"]["prefer_numerical_dates"])
         event = Gdk.Event.new(Gdk.EventType.BUTTON_PRESS)
         event.window = c.canvas.get_window()
@@ -331,6 +320,136 @@ class GuiTests(unittest.TestCase):
         self.assertEqual("seasonal", self.app.cfg["appearance"]["style"])
         self.assertEqual(4, len(s.season_previews))
         self.assertIn("روزلت", s.get_title())
+
+    def test_bilingual_grid_and_keyboard_use_matching_physical_direction(self):
+        window = self.window(CalendarWindow)
+        first = gregorian(1405, 7, 1)
+        for lang, column, delta in (("fa", 2, -1), ("en", 4, 1)):
+            self.app.cfg["language"] = lang
+            window.go_today()
+            grid = window.cells[first].get_parent()
+            self.assertEqual(column, grid.child_get_property(window.cells[first], "left-attach"))
+            window.focus_selected()
+            self.assertTrue(window.key(window, SimpleNamespace(keyval=Gdk.KEY_Right)))
+            self.assertEqual(date(2026, 10, 10 + delta), window.selected)
+            window.copy_menu.get_children()[0].activate()
+            self.assertIn(("copy", (window.selected, 0), {}), self.app.actions)
+            window.copy_menu.get_children()[-1].get_submenu().get_children()[1].activate()
+            self.assertIn(("copy", (window.selected, 1), {"numerical": True}), self.app.actions)
+
+    def test_navigation_alignment_and_settings_page_survive_refresh(self):
+        settings = self.window(Settings)
+        for lang in ("fa", "en"):
+            self.app.cfg["language"] = lang
+            settings.apply()
+            pump()
+            self.assertEqual(1 if lang == "fa" else 0, settings.root.get_children().index(settings.sidebar))
+            item = settings.nav_items["appearance"]
+            icon, title = item.get_child().get_children()
+            self.assertEqual(Gtk.TextDirection.RTL if lang == "fa" else Gtk.TextDirection.LTR, title.get_direction())
+            self.assertEqual(0, title.get_xalign(), "GTK logical-start alignment mirrors with the locale")
+            if settings.sidebar.get_visible():
+                self.assertEqual(lang == "fa", icon.get_allocation().x > title.get_allocation().x)
+        settings.show_page("events")
+        settings.category_switches["cultural"].set_active(False)
+        self.assertNotIn("cultural", self.app.cfg["events"]["visible_categories"])
+        settings.apply()
+        self.assertEqual("events", settings.stack.get_visible_child_name())
+        settings.show_page("appearance")
+        preview = settings.preview
+        settings.season_previews["winter"].clicked()
+        self.assertIs(preview, settings.preview, "A scene change updates the persistent preview")
+        self.assertEqual("winter", settings.preview.scene.season)
+        settings.auto_switch.set_active(True)
+        self.assertEqual("auto", self.app.cfg["appearance"]["season"])
+
+    def test_motion_is_bounded_interruptible_and_respects_system_setting(self):
+        from rooz.ui.motion import enabled
+        settings = Gtk.Settings.get_default()
+        original = settings.get_property("gtk-enable-animations")
+        settings.set_property("gtk-enable-animations", True)
+        try:
+            window = self.window(CalendarWindow)
+            card = self.window(Card)
+            for delta in (-1, 1, -1, 1):
+                window.navigate(delta)
+                self.assertLessEqual(len(window.body_stack.get_children()), 2)
+            self.app.cfg["appearance"]["season"] = "winter"
+            card.apply()
+            self.assertNotEqual(0, card.artwork_transition.tick_id)
+            deadline = time.monotonic() + .7
+            while time.monotonic() < deadline:
+                pump()
+                time.sleep(.01)
+            self.assertEqual(0, card.artwork_transition.tick_id)
+            self.assertIsNone(card.artwork_transition.previous)
+            self.assertEqual(1, len(window.body_stack.get_children()))
+            self.app.cfg["appearance"]["motion_effects"] = False
+            window.navigate(-1)
+            card.apply()
+            self.assertFalse(enabled(self.app.cfg, window))
+            self.assertEqual(0, window.body_stack.get_transition_duration())
+            self.assertEqual(0, card.artwork_transition.tick_id)
+            self.app.cfg["appearance"]["motion_effects"] = True
+            settings.set_property("gtk-enable-animations", False)
+            window.navigate(1)
+            self.assertFalse(enabled(self.app.cfg, window))
+            self.assertEqual(Gtk.StackTransitionType.NONE, window.body_stack.get_transition_type())
+            settings.set_property("gtk-enable-animations", True)
+            self.app.cfg["appearance"]["season"] = "spring"
+            card.apply()
+            card.hide()
+            self.assertEqual(0, card.artwork_transition.tick_id)
+        finally:
+            settings.set_property("gtk-enable-animations", original)
+
+    def test_narrow_windows_keep_navigation_and_copy_available(self):
+        calendar = self.window(CalendarWindow)
+        settings = self.window(Settings)
+        calendar.resize(420, 350)
+        settings.resize(420, 350)
+        deadline = time.monotonic() + .15
+        while time.monotonic() < deadline:
+            pump()
+            time.sleep(.01)
+        self.assertFalse(calendar.sidebar.get_visible())
+        self.assertTrue(calendar.compact_menu.get_visible())
+        self.assertIsNotNone(calendar.compact_menu.get_popup())
+        self.assertFalse(settings.sidebar.get_visible())
+        self.assertTrue(settings.page_picker.get_visible())
+        settings.page_picker.set_active_id("dates")
+        self.assertEqual("dates", settings.stack.get_visible_child_name())
+        self.assertEqual(5, len(calendar.copy_menu.get_children()))
+        area = calendar.get_display().get_primary_monitor().get_workarea()
+        self.assertLessEqual(calendar.get_size().width, area.width)
+        self.assertLessEqual(settings.get_size().width, area.width)
+
+    def test_missing_artwork_uses_readable_plain_surface(self):
+        from unittest.mock import patch
+        self.app.cfg["appearance"]["theme"] = "light"
+        with patch("rooz.ui.presentation.image", return_value=None):
+            calendar = self.window(CalendarWindow)
+            settings = self.window(Settings)
+            self.assertIsNone(calendar.hero.scene.season)
+            self.assertIsNone(settings.preview.scene.season)
+            self.assertFalse(calendar.hero.get_style_context().has_class("scenic"))
+            self.assertFalse(settings.preview.get_style_context().has_class("scenic"))
+            self.assertEqual(30, len(calendar.cells))
+
+    def test_live_appearance_keeps_date_cells_and_preview_content(self):
+        calendar = self.window(CalendarWindow)
+        settings = self.window(Settings)
+        cell = calendar.cells[self.app.today]
+        preview_grid = settings.preview.content.get_children()[1]
+        calendar.focus_selected()
+        self.app.cfg["appearance"].update(season="winter", artwork_intensity=.4)
+        calendar.refresh_appearance()
+        settings.refresh_appearance()
+        self.assertIs(cell, calendar.cells[self.app.today])
+        self.assertIs(cell, calendar.get_focus())
+        self.assertIs(preview_grid, settings.preview.content.get_children()[1])
+        self.assertEqual("winter", calendar.hero.scene.season)
+        self.assertEqual(.4, settings.preview.scene.intensity)
 
 
 if __name__ == "__main__":

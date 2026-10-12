@@ -1,4 +1,4 @@
-"""Native accessible month view; fixed Iranian physical weekday order."""
+"""Native accessible month view; locale-aware Iranian week layout and scenic header."""
 
 from datetime import timedelta
 
@@ -7,10 +7,11 @@ from gi.repository import Gdk, Gtk
 from ..calendar_service import MAX_YEAR, MIN_YEAR, gregorian, jalali, month_cells, month_length, shift_month
 from ..formatting import dates, full_date
 from ..i18n import GMONTHS, JMONTHS, SHORT_WEEK, WEEKDAYS
-from .common import button, clear, direction, label
+from .common import button, clear, direction, label, navigation_item, brand
 from .month_picker import MonthPicker
 from .theme import style_window
-from .artwork import ScenicBand
+from .presentation import ScenicSurface
+from .motion import ContentStack, enabled
 
 
 class CalendarWindow(Gtk.ApplicationWindow):
@@ -23,10 +24,10 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.get_style_context().add_class("rooz")
         monitor = self.get_display().get_primary_monitor() or self.get_display().get_monitor(0)
         area = monitor.get_workarea()
-        self.set_default_size(min(860, area.width - 48), min(680, area.height - 64))
+        self.set_default_size(min(880, area.width - 48), min(640, area.height - 120))
         self.set_size_request(360, 300)
-        self.root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        self.root.set_border_width(14)
+        self.root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        self.root.set_border_width(18)
         self.outer = Gtk.ScrolledWindow()
         self.outer.set_overlay_scrolling(False)
         self.outer.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -34,13 +35,23 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.view = "calendar"
         self.sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.sidebar.get_style_context().add_class("sidebar")
-        self.sidebar.set_size_request(148, -1)
+        self.sidebar.set_size_request(156, -1)
         self.sidebar.set_no_show_all(True)
         self.shell = Gtk.Box(spacing=4)
         self.shell.set_direction(Gtk.TextDirection.LTR)
         self.shell.pack_start(self.outer, True, True, 0)
         self.shell.pack_start(self.sidebar, False, False, 0)
         self.add(self.shell)
+        self.header_bar = Gtk.HeaderBar(show_close_button=True)
+        self.set_titlebar(self.header_bar)
+        self.compact_menu = Gtk.MenuButton()
+        self.compact_menu.set_image(Gtk.Image.new_from_icon_name("open-menu-symbolic", Gtk.IconSize.MENU))
+        self.compact_menu.set_no_show_all(True)
+        self.header_bar.pack_start(self.compact_menu)
+        self.hero = ScenicSurface(app, 124)
+        self.body_stack = ContentStack()
+        self.root.pack_start(self.hero, False, False, 0)
+        self.root.pack_start(self.body_stack, False, False, 0)
         self.connect("size-allocate", self.responsive)
         self.connect("delete-event", lambda *_: self.hide() or True)
         self.connect("key-press-event", self.key)
@@ -51,11 +62,32 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.show_all()
 
     def responsive(self, _, allocation):
-        self.sidebar.set_visible(allocation.width >= 660)
+        wide = allocation.width >= 660
+        self.sidebar.set_visible(wide)
+        self.compact_menu.set_visible(not wide)
+        if hasattr(self, "header_row"):
+            narrow = self.hero.get_allocated_width() < 440
+            orientation = Gtk.Orientation.VERTICAL if narrow else Gtk.Orientation.HORIZONTAL
+            if self.header_row.get_orientation() != orientation:
+                self.header_row.set_orientation(orientation)
+            self.hero.scene.set_size_request(-1, round((156 if narrow else 124) * max(1, self.app.cfg["appearance"]["text_scale"])))
 
     def show_view(self, view):
         self.view = view
-        self.apply()
+        self.apply(animate=True)
+
+    def refresh_appearance(self):
+        """Scenery and typography updates keep current cells, selection and focus."""
+        style_window(self, self.app.cfg, self.app.today, self.month)
+        self.hero.sync(self.month)
+        for menu in (self.compact_menu.get_popup(), getattr(self, "copy_menu", None)):
+            if menu:
+                style_window(menu, self.app.cfg, self.app.today, self.month)
+        if not enabled(self.app.cfg, self):
+            self.body_stack.set_transition_type(Gtk.StackTransitionType.NONE)
+            self.body_stack.set_transition_duration(0)
+            self.body_stack.prune(force=True)
+        self.responsive(self, self.get_allocation())
 
     def show_about(self):
         from .. import __version__
@@ -82,7 +114,7 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.year, self.month = shift_month(self.year, self.month, delta)
         old = jalali(self.selected)
         self.selected = gregorian(self.year, self.month, min(old.day, month_length(self.year, self.month)))
-        self.apply()
+        self.apply(animate=True)
         self.focus_selected()
 
     def go_today(self):
@@ -90,7 +122,7 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.selected = self.app.today
         j = jalali(self.selected)
         self.year, self.month = j.year, j.month
-        self.apply()
+        self.apply(animate=True)
         self.focus_selected()
 
     def choose_month(self, year, month):
@@ -99,7 +131,7 @@ class CalendarWindow(Gtk.ApplicationWindow):
         old = jalali(self.selected)
         self.year, self.month = year, month
         self.selected = gregorian(year, month, min(old.day, month_length(year, month)))
-        self.apply()
+        self.apply(animate=True)
         self.focus_selected()
 
     def dismiss_month_picker(self):
@@ -141,7 +173,8 @@ class CalendarWindow(Gtk.ApplicationWindow):
         # Only date-cell focus overrides arrows, preserving native control navigation.
         if self.get_focus() not in self.cells.values():
             return False
-        deltas = {Gdk.KEY_Left: 1, Gdk.KEY_Right: -1, Gdk.KEY_Up: -7, Gdk.KEY_Down: 7}
+        forward = 1 if self.app.loc.lang == "en" else -1
+        deltas = {Gdk.KEY_Left: -forward, Gdk.KEY_Right: forward, Gdk.KEY_Up: -7, Gdk.KEY_Down: 7}
         if k in deltas:
             day = self.selected + timedelta(days=deltas[k])
             try:
@@ -165,111 +198,106 @@ class CalendarWindow(Gtk.ApplicationWindow):
             return True
         return False
 
-    def apply(self):
+    def apply(self, animate=False):
         self.dismiss_month_picker()
         was_visible = self.get_visible()
-        loc = self.app.loc
-        repo = self.app.repo
-        cfg = self.app.cfg
-        self.set_direction(Gtk.TextDirection.RTL if loc.lang == "fa" else Gtk.TextDirection.LTR)
-        season = style_window(self, cfg, self.app.today, self.month)
-        self.set_title("روزلت · تقویم" if loc.lang == "fa" else "Roozlet · Calendar")
+        loc, repo, cfg = self.app.loc, self.app.repo, self.app.cfg
+        rtl = loc.lang == "fa"
+        self.set_direction(Gtk.TextDirection.RTL if rtl else Gtk.TextDirection.LTR)
+        style_window(self, cfg, self.app.today, self.month)
+        title_text = "روزلت · تقویم" if rtl else "Roozlet · Calendar"
+        self.set_title(title_text)
+        self.header_bar.set_title(title_text)
         self.shell.set_direction(Gtk.TextDirection.LTR)
-        self.shell.reorder_child(self.sidebar, 1 if loc.lang == "fa" else 0)
+        self.shell.reorder_child(self.sidebar, 1 if rtl else 0)
         clear(self.sidebar)
-        brand = Gtk.Box(spacing=7)
-        from .icons import Mark
-        from .theme import tokens
-        brand.pack_start(Mark("autumn", tokens(cfg, self.app.today, self.month)["accent_text"], 24), False, False, 0)
-        brand.pack_start(label("روزلت" if loc.lang == "fa" else "Roozlet", "heading"), True, True, 0)
-        self.sidebar.pack_start(brand, False, False, 10)
-        for key, callback in [
-            ("calendar", lambda: self.show_view("calendar")),
-            ("today", self.go_today),
-            ("occasions", lambda: self.show_view("occasions")),
-            ("settings", self.app.open_settings),
-            ("about", self.show_about),
-        ]:
-            item = button(loc.t(key), callback)
-            row = Gtk.Box(spacing=9)
-            item.remove(item.get_child())
-            names = {"calendar": "x-office-calendar-symbolic", "today": "go-jump-symbolic",
-                     "occasions": "view-list-symbolic", "settings": "emblem-system-symbolic", "about": "help-about-symbolic"}
-            row.pack_start(Gtk.Image.new_from_icon_name(names[key], Gtk.IconSize.MENU), False, False, 0)
-            row.pack_start(label(loc.t(key)), True, True, 0)
-            item.add(row)
-            item.get_accessible().set_name(loc.t(key))
-            if key == self.view:
-                item.get_style_context().add_class("selected")
-            self.sidebar.pack_start(item, False, False, 0)
-        self.sidebar.pack_start(Gtk.Box(), True, True, 0)
-        if cfg["appearance"]["style"] == "seasonal" and cfg["appearance"]["show_artwork"]:
-            self.sidebar.pack_start(ScenicBand(season, 120, cfg["appearance"]["artwork_intensity"]), False, False, 0)
-        direction(self.sidebar, loc.lang == "fa")
-        for child in self.sidebar.get_children():
-            child.show_all()
-        clear(self.root)
-        self.cells = {}
-        header = Gtk.Box(spacing=8)
-        self.root.pack_start(header, False, False, 0)
-        title = button(loc.n(f"{JMONTHS[loc.lang][self.month - 1]} {self.year}") + "  ▾", lambda: self.open_month_picker(self.title_button), loc.t("choose_month"))
-        title.get_style_context().add_class("month-title")
-        self.title_button = title
-        header.pack_start(title, True, False, 0)
-        header.pack_end(button("×", self.hide, loc.t("close")), False, False, 0)
-        header.pack_end(button("⚙", self.app.open_settings, loc.t("settings")), False, False, 0)
-        menu = Gtk.MenuButton()
-        menu.set_label("≡")
-        menu.set_tooltip_text(loc.t("occasions"))
-        menu.get_accessible().set_name(loc.t("open"))
+        self.sidebar.pack_start(brand("روزلت" if rtl else "Roozlet", rtl), False, False, 10)
+        self.nav_items = {}
+        actions = [("calendar", "x-office-calendar-symbolic", lambda: self.show_view("calendar")),
+                   ("today", "go-jump-symbolic", self.go_today),
+                   ("occasions", "view-list-symbolic", lambda: self.show_view("occasions")),
+                   ("settings", "emblem-system-symbolic", self.app.open_settings),
+                   ("about", "help-about-symbolic", self.show_about)]
         popup = Gtk.Menu()
         popup.get_style_context().add_class("rooz")
         style_window(popup, cfg, self.app.today, self.month)
-        for key, fn in [("calendar", lambda: self.show_view("calendar")), ("occasions", lambda: self.show_view("occasions")), ("about", self.show_about)]:
-            item = Gtk.MenuItem(label=loc.t(key))
-            item.connect("activate", lambda _, f=fn: f())
-            popup.append(item)
+        for key, icon, callback in actions:
+            item = navigation_item(loc.t(key), icon, callback, rtl)
+            if key == self.view:
+                item.get_style_context().add_class("selected")
+            self.sidebar.pack_start(item, False, False, 0)
+            self.nav_items[key] = item
+            menu_item = Gtk.MenuItem(label=loc.t(key))
+            menu_item.connect("activate", lambda _, fn=callback: fn())
+            popup.append(menu_item)
+        direction(self.sidebar, rtl)
+        direction(popup, rtl)
+        for child in self.sidebar.get_children():
+            child.show_all()
         popup.show_all()
-        menu.set_popup(popup)
-        header.pack_end(menu, False, False, 0)
+        old_popup = self.compact_menu.get_popup()
+        self.compact_menu.set_popup(popup)
+        if old_popup:
+            old_popup.destroy()
+        self.compact_menu.set_tooltip_text(loc.t("open"))
+        self.hero.sync(self.month)
+        clear(self.hero.content)
+        header = Gtk.Box(spacing=12)
+        self.header_row = header
+        self.hero.content.pack_start(header, True, True, 0)
+        heading = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        title = button(loc.n(f"{JMONTHS[loc.lang][self.month - 1]} {self.year}") + "  ▾",
+                       lambda: self.open_month_picker(self.title_button), loc.t("choose_month"))
+        title.get_style_context().add_class("month-title")
+        title.set_halign(Gtk.Align.START)
+        self.title_button = title
+        heading.pack_start(title, False, False, 0)
         first = gregorian(self.year, self.month, 1)
         last = gregorian(self.year, self.month, month_length(self.year, self.month))
-        span = loc.n(
-            f"{GMONTHS[loc.lang][first.month - 1]} {first.year} — {GMONTHS[loc.lang][last.month - 1]} {last.year}"
-        )
-        self.root.pack_start(label(span, "muted"), False, False, 0)
-        nav = Gtk.Box(spacing=5)
-        self.root.pack_start(nav, False, False, 0)
-        for text, delta, key in [("«", -12, "previous_year"), ("‹", -1, "previous_month")]:
-            b = button(text, lambda d=delta: self.navigate(d), loc.t(key))
-            b.set_sensitive(not (self.year == MIN_YEAR and (delta == -12 or self.month == 1)))
-            nav.pack_start(b, False, False, 0)
-        b = button(loc.t("today"), self.go_today, loc.t("today_help"))
-        b.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
-        b.connect("button-press-event", self.today_press)
-        b.connect("popup-menu", lambda *_: self.open_month_picker())
-        self.today_button = b
-        nav.pack_start(b, True, False, 0)
-        for text, delta, key in [("›", 1, "next_month"), ("»", 12, "next_year")]:
-            b = button(text, lambda d=delta: self.navigate(d), loc.t(key))
-            b.set_sensitive(not (self.year == MAX_YEAR and (delta == 12 or self.month == 12)))
-            nav.pack_start(b, False, False, 0)
+        span = loc.n(f"{GMONTHS[loc.lang][first.month - 1]} {first.year} — {GMONTHS[loc.lang][last.month - 1]} {last.year}")
+        heading.pack_start(label(span, "muted", wrap=True), False, False, 0)
+        header.pack_start(heading, True, True, 0)
+        nav = Gtk.Box(spacing=4)
+        nav.set_valign(Gtk.Align.END)
+        header.pack_end(nav, False, False, 0)
+        previous = button("›" if rtl else "‹", lambda: self.navigate(-1), loc.t("previous_month"))
+        previous.set_sensitive(not (self.year == MIN_YEAR and self.month == 1))
+        nav.pack_start(previous, False, False, 0)
+        self.today_button = button(loc.t("today"), self.go_today, loc.t("today_help"))
+        self.today_button.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        self.today_button.connect("button-press-event", self.today_press)
+        self.today_button.connect("popup-menu", lambda *_: self.open_month_picker())
+        nav.pack_start(self.today_button, False, False, 0)
+        following = button("‹" if rtl else "›", lambda: self.navigate(1), loc.t("next_month"))
+        following.set_sensitive(not (self.year == MAX_YEAR and self.month == 12))
+        nav.pack_start(following, False, False, 0)
+        direction(self.hero.content, rtl)
+        self.body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.cells = {}
         if self.view == "occasions":
             self.build_occasions(first, last)
-            direction(self.root, loc.lang == "fa")
-            self.show_all()
-            self.responsive(self, self.get_allocation())
-            if not was_visible:
-                self.hide()
-            return
+        else:
+            self.build_calendar()
+        direction(self.body, rtl)
+        self.body_stack.replace(self.body, cfg, animate and was_visible, 160)
+        direction(self.root, rtl)
+        self.show_all()
+        self.responsive(self, self.get_allocation())
+        if not was_visible:
+            self.hide()
+
+    def build_calendar(self):
+        loc, repo, cfg = self.app.loc, self.app.repo, self.app.cfg
+        rtl = loc.lang == "fa"
         grid = Gtk.Grid()
         grid.set_direction(Gtk.TextDirection.LTR)
         grid.set_column_homogeneous(True)
         grid.set_row_spacing(2)
         grid.set_column_spacing(4)
-        self.root.pack_start(grid, False, False, 0)
-        for col, wd in enumerate(SHORT_WEEK[loc.lang]):
-            weekday_label = label(wd, "holiday" if col == 0 else "muted", 0.5)
+        self.body.pack_start(grid, False, False, 0)
+        weekdays = SHORT_WEEK[loc.lang] if rtl else list(reversed(SHORT_WEEK[loc.lang]))
+        for col, wd in enumerate(weekdays):
+            weekday_label = label(wd, "holiday" if col == (0 if rtl else 6) else "muted", 0.5)
             grid.attach(weekday_label, col, 0, 1, 1)
         cells = month_cells(self.year, self.month)
         rows = max(5, max(c.row for c in cells) + 1)
@@ -317,62 +345,69 @@ class CalendarWindow(Gtk.ApplicationWindow):
             b.set_tooltip_text(tip)
             b.get_accessible().set_name(tip)
             b.connect("clicked", lambda _, d=cell.day: self.select(d))
-            grid.attach(b, cell.column, cell.row + 1, 1, 1)
+            grid.attach(b, cell.column if rtl else 6 - cell.column, cell.row + 1, 1, 1)
             self.cells[cell.day] = b
-        self.root.pack_start(Gtk.Separator(), False, False, 3)
-        if cfg["appearance"]["style"] == "seasonal" and cfg["appearance"]["show_artwork"]:
-            self.root.pack_start(ScenicBand(season, 88, cfg["appearance"]["artwork_intensity"]), False, False, 0)
+        panel = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        panel.get_style_context().add_class("details-panel")
+        self.body.pack_start(panel, False, False, 0)
+        top = Gtk.Box(spacing=12)
+        panel.pack_start(top, False, False, 0)
+        titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
         day_header = WEEKDAYS[loc.lang][self.selected.weekday()] + " · " + dates(self.selected, loc, repo)[0]
-        self.root.pack_start(label(day_header), False, False, 0)
-        self.root.pack_start(
-            label(" · ".join(dates(self.selected, loc, repo)[1:]), "muted", wrap=True), False, False, 0
-        )
+        titles.pack_start(label(day_header, "detail-heading", wrap=True), False, False, 0)
+        titles.pack_start(label(" · ".join(dates(self.selected, loc, repo)[1:]), "muted", wrap=True), False, False, 0)
+        top.pack_start(titles, True, True, 0)
+        self.copy_button = Gtk.MenuButton(label=loc.t("copy_date") + "  ▾")
+        self.copy_button.set_valign(Gtk.Align.START)
+        self.copy_button.get_style_context().add_class("copy-button")
+        self.copy_button.get_accessible().set_name(loc.t("copy_date"))
+        self.copy_menu = Gtk.Menu()
+        self.copy_menu.get_style_context().add_class("rooz")
+        style_window(self.copy_menu, cfg, self.app.today, self.month)
+        for key, index in (("copy_persian", 0), ("copy_gregorian", 1), ("copy_hijri", 2), ("copy_all", None)):
+            item = Gtk.MenuItem(label=loc.t(key))
+            if index == 2:
+                item.set_sensitive(bool(repo.hijri(self.selected)))
+            item.connect("activate", lambda _, i=index: self.app.copy(self.selected, i))
+            self.copy_menu.append(item)
+        numeric = Gtk.MenuItem(label=loc.t("copy_numeric"))
+        submenu = Gtk.Menu()
+        for key, index in (("copy_persian", 0), ("copy_gregorian", 1), ("copy_hijri", 2), ("copy_all", None)):
+            item = Gtk.MenuItem(label=loc.t(key))
+            item.set_sensitive(index != 2 or bool(repo.hijri(self.selected)))
+            item.connect("activate", lambda _, i=index: self.app.copy(self.selected, i, numerical=True))
+            submenu.append(item)
+        numeric.set_submenu(submenu)
+        self.copy_menu.append(numeric)
+        direction(self.copy_menu, rtl)
+        self.copy_menu.show_all()
+        self.copy_button.set_popup(self.copy_menu)
+        top.pack_end(self.copy_button, False, False, 0)
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scroll.set_min_content_height(48)
-        details = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=7)
+        scroll.set_min_content_height(42)
+        scroll.set_max_content_height(110)
+        scroll.set_propagate_natural_height(True)
+        details = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         scroll.add(details)
-        self.root.pack_start(scroll, True, True, 0)
-        es = repo.visible(self.selected, cfg["events"])
+        panel.pack_start(scroll, False, False, 0)
+        events = repo.visible(self.selected, cfg["events"])
         if not repo.known(self.selected):
             details.pack_start(label(loc.t("incomplete"), "muted", wrap=True), False, False, 0)
-        if not es:
-            key = (
-                "filtered"
-                if repo.events(self.selected)
-                else "empty"
-                if repo.known(self.selected)
-                else "hijri_unavailable"
-            )
+        if not events:
+            key = "filtered" if repo.events(self.selected) else "empty" if repo.known(self.selected) else "hijri_unavailable"
             details.pack_start(label(loc.t(key), "muted", wrap=True), False, False, 0)
-        for e in es:
-            prefix = (
-                "◆ " + loc.t("holiday")
-                if e["is_public_holiday"]
-                else "• " + " / ".join(loc.t(c) for c in e["categories"])
-            )
-            event = label(
-                prefix + " · " + loc.event_title(e), "holiday" if e["is_public_holiday"] else None, wrap=True
-            )
-            event.set_selectable(True)
-            details.pack_start(event, False, False, 0)
-        footer = Gtk.Box(spacing=4)
-        for key, index in [("copy_persian", 0), ("copy_gregorian", 1), ("copy_all", None)]:
-            footer.pack_start(
-                button(loc.t(key), lambda i=index: self.app.copy(self.selected, i)), True, True, 0
-            )
-        self.root.pack_start(footer, False, False, 0)
-        direction(self.root, loc.lang == "fa")
-        self.show_all()
-        self.responsive(self, self.get_allocation())
-        if not was_visible:
-            self.hide()
+        for event in events:
+            prefix = "◆ " + loc.t("holiday") if event["is_public_holiday"] else "• " + " / ".join(loc.t(c) for c in event["categories"])
+            item = label(prefix + " · " + loc.event_title(event), "holiday" if event["is_public_holiday"] else None, wrap=True)
+            item.set_selectable(True)
+            details.pack_start(item, False, False, 0)
 
     def build_occasions(self, first, last):
         loc, repo, cfg = self.app.loc, self.app.repo, self.app.cfg
-        self.root.pack_start(label(loc.t("occasions"), "heading"), False, False, 4)
+        self.body.pack_start(label(loc.t("occasions"), "heading"), False, False, 4)
         if not repo.known(first):
-            self.root.pack_start(label(loc.t("incomplete"), "muted", wrap=True), False, False, 8)
+            self.body.pack_start(label(loc.t("incomplete"), "muted", wrap=True), False, False, 8)
             return
         any_visible = False
         day = first
@@ -380,13 +415,14 @@ class CalendarWindow(Gtk.ApplicationWindow):
             events = repo.visible(day, cfg["events"])
             if events:
                 any_visible = True
-                row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+                row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+                row.get_style_context().add_class("details-panel")
                 row.pack_start(button(dates(day, loc, repo)[0], lambda d=day: self.select(d)), False, False, 0)
                 for event in events:
                     value = ("◆ " if event["is_public_holiday"] else "• ") + loc.event_title(event)
                     row.pack_start(label(value, "holiday" if event["is_public_holiday"] else None, wrap=True), False, False, 0)
-                self.root.pack_start(row, False, False, 7)
-                self.root.pack_start(Gtk.Separator(), False, False, 0)
+                self.body.pack_start(row, False, False, 7)
+                self.body.pack_start(Gtk.Separator(), False, False, 0)
             day += timedelta(days=1)
         if not any_visible:
-            self.root.pack_start(label(loc.t("filtered"), "muted", wrap=True), False, False, 8)
+            self.body.pack_start(label(loc.t("filtered"), "muted", wrap=True), False, False, 8)

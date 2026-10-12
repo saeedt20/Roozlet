@@ -27,7 +27,7 @@ and Debian package identity remain unchanged so existing installations upgrade n
 
 ## Four seasons, one compact calendar
 
-Roozlet 0.2.0 adds **Spring, Summer, Autumn and Winter** appearances with bundled
+Roozlet includes **Spring, Summer, Autumn and Winter** appearances with bundled
 scenery and scalable seasonal icons. The **Shamsi date is always in the middle**
 of the 320 × 236 logical-pixel widget, with Gregorian on the left and Iranian
 Hijri on the right. Hiding either auxiliary calendar keeps Shamsi centered.
@@ -37,26 +37,28 @@ design mockups or a claim of a native Mint installation test.
 
 <table>
 <tr><th>Spring</th><th>Summer</th></tr>
-<tr><td><img src="docs/screenshots/v0.2.0-card-spring-fa-dark.png" width="320" alt="Spring centered Shamsi widget"></td><td><img src="docs/screenshots/v0.2.0-card-summer-fa-dark.png" width="320" alt="Summer centered Shamsi widget"></td></tr>
+<tr><td><img src="docs/screenshots/v0.3.0-card-spring-fa-dark.png" width="320" alt="Spring centered Shamsi widget"></td><td><img src="docs/screenshots/v0.3.0-card-summer-fa-dark.png" width="320" alt="Summer centered Shamsi widget"></td></tr>
 <tr><th>Autumn</th><th>Winter</th></tr>
-<tr><td><img src="docs/screenshots/v0.2.0-card-autumn-fa-dark.png" width="320" alt="Autumn centered Shamsi widget"></td><td><img src="docs/screenshots/v0.2.0-card-winter-fa-dark.png" width="320" alt="Winter widget with snowflake"></td></tr>
+<tr><td><img src="docs/screenshots/v0.3.0-card-autumn-fa-dark.png" width="320" alt="Autumn centered Shamsi widget"></td><td><img src="docs/screenshots/v0.3.0-card-winter-fa-dark.png" width="320" alt="Winter widget with snowflake"></td></tr>
 </table>
 
-![Persian calendar with right sidebar](docs/screenshots/v0.2.0-calendar-fa-dark.png)
-![English light calendar with left sidebar](docs/screenshots/v0.2.0-calendar-en-light.png)
-![Four seasonal settings previews](docs/screenshots/v0.2.0-settings-fa-dark.png)
+![Persian calendar with right sidebar](docs/screenshots/v0.3.0-calendar-fa-dark.png)
+![English light calendar with left sidebar](docs/screenshots/v0.3.0-calendar-en-light.png)
+![Persian preferences with right-aligned sidebar](docs/screenshots/v0.3.0-settings-fa-dark.png)
+![English preferences with left-aligned sidebar](docs/screenshots/v0.3.0-settings-en-dark.png)
 
-### New in 0.2.0
+### New in 0.3.0
 
-- Automatic appearance follows today's **Jalali season**, with a manual override.
-- Dark/light appearance, custom accents, artwork intensity and Classic mode are independent choices.
-- Optional **Follow displayed month** changes only the full calendar, leaving the desktop widget on today's season.
-- Click the month title or right-click **Today** (Shift+F10 when focused) to choose any of the 12 months and navigate years.
-- The adaptive sidebar mirrors between Persian and English, with Calendar, Today, Occasions, Settings and About. The monthly occasion list links back to selected dates.
-- Numerical-date tooltips, explicit numerical clipboard actions, verified calendar data, position settings and opt-in startup remain available.
+- Scenic calendar header, quiet date grid and a selected-day card with one **Copy date** dropdown, including numerical variants.
+- **Persian RTL / English LTR** navigation and weekday columns. Saturday starts the week in both; keyboard arrows follow the visible direction.
+- Grouped preferences, a live current-date widget preview, four season tiles, light/dark controls and an advanced section for fonts, scales and Classic mode.
+- **Subtle transitions:** 160–180 ms content fades, 260 ms artwork crossfades and gentle button feedback. Disable them in Appearance; system GTK animation preferences are respected. There is no looping or idle animation.
+- Automatic/manual seasons and calendar-only **Follow displayed month** remain available. The widget's Shamsi date stays centered.
+- Click the month title or right-click **Today** (Shift+F10 when focused) to choose a month and year.
+- Independent digits, numerical copies, verified data, font/position settings and opt-in startup are preserved.
 
 **Upgrading:** old settings keep their Classic appearance and custom accent. To
-turn on scenery, open **Settings → Appearance → Appearance style → Seasonal**.
+turn on scenery, open **Settings → Appearance → Advanced settings → Appearance style → Seasonal**.
 Fresh installations use automatic seasonal appearance. No wallpaper or system
 theme is changed and no artwork is downloaded at runtime.
 
@@ -95,11 +97,11 @@ Full calendar at 200% scale on a constrained work area; scroll to reach the lowe
 
 ## Install
 
-Download `roozlet_0.2.0-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
+Download `roozlet_0.3.0-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
 From the folder containing the downloaded file:
 
 ```bash
-sudo apt install ./roozlet_0.2.0-1_all.deb
+sudo apt install ./roozlet_0.3.0-1_all.deb
 rooz
 ```
 
@@ -117,7 +119,7 @@ sha256sum -c SHA256SUMS
 
 Double-click the card to open the month view. Use the gear for Settings, right-click
 for calendar/copy/position actions, and drag the header to move the unlocked card.
-Closing the calendar or Settings leaves the card running.
+Closing the calendar or Settings leaves the card running. The **Copy date** menu includes textual/numerical formats and all-date copies.
 
 | Command | Action |
 | --- | --- |
@@ -130,8 +132,7 @@ Closing the calendar or Settings leaves the card running.
 | `rooz --version` | Print the version |
 | `rooz --quit` | Close the running application |
 
-In the month grid, **Saturday is on the right** and **Friday is on the left** in
-both languages. Left moves one day forward; Right moves one day backward.
+In Persian, **Saturday is on the right** and **Friday is on the left**; Left moves one day forward. In English, **Saturday is on the left** and **Friday is on the right**; Right moves one day forward.
 Up/Down move one week, Page Up/Down move one month, and Home/End select the first/last
 day of the month. The Today button returns to the current civil day.
 
@@ -194,7 +195,7 @@ python3 scripts/validate-data.py
 GDK_SCALE=2 ./scripts/test-gui.sh
 ```
 
-The GTK checks need an active display or Xvfb. They use temporary XDG directories
+Version 0.3.0 passes **51 tests**, including **20 GTK checks**, also checked at 200% scaling. The GTK checks need an active display or Xvfb. They use temporary XDG directories
 and a private D-Bus session. The original 0.1.0 validation includes **20 core tests**, **seven
 GTK checks at each scale**, **21 native Xfce interaction checks**, installed-layout
 launches, Persian clipboard round trips and reproducible package builds.

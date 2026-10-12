@@ -4,6 +4,38 @@ The original 0.1.0 tests were performed on Linux Mint 22.3 Xfce/X11 with Python 
 PyGObject 3.48.2, Cairo 1.25.1, Xfwm4 4.18.0, Fontconfig 2.15.0 and Poppler 24.02.0.
 Only application window captures belong in docs/screenshots.
 
+## 0.3.0 calendar/settings and motion — 12 October 2026
+
+- All **51 tests** passed: 31 calendar/data/configuration/format/season checks and
+  20 native GTK checks in an isolated Ubuntu 24.04 GTK3 virtual X11 runtime.
+- All **20 GTK checks also passed at 200% scale**. Temporary XDG profiles and
+  private D-Bus/display transports kept tests independent of user settings.
+- New checks cover Persian/English physical columns and keyboard arrows,
+  navigation-icon/label order, settings-page retention, actual switch/season
+  callbacks, textual/numerical dropdown copy routing, missing artwork on a light
+  surface, narrow-window navigation and work-area bounds.
+- Motion checks exercise rapid navigation (at most two content trees, one after
+  completion), 260 ms scene completion, unmap cleanup, opt-out and native GTK
+  animation opt-out. Appearance updates preserve existing date cells, focus and
+  preview content rather than rebuilding them on slider input.
+- Annual data is unchanged: 365 date mappings, 305 occasions and 26 statutory
+  holiday dates; validation reports no issues.
+- Actual GTK window captures in Persian/English and dark/light were reviewed;
+  scene headers, grouped preferences, centered Shamsi preview, copy menu and
+  outlined native icons are real UI, not generated mockups. Capture dates use a
+  deterministic 12 October fixture in the isolated screenshot harness.
+- The extracted Debian package ran from /tmp; real language/digit/season/color/
+  font callbacks, validated configuration replacement, actual numerical GTK
+  clipboard, month-title picker, filters, motion persistence and unavailable
+  Hijri copy were checked. All 12 installed-layout checks passed; see v0.3.0-installed-check.json.
+- A 35.00-second widget-only idle observation held at **75,020–75,024 KiB RSS**
+  (about 73.27 MiB), with **0.0009 seconds process CPU** (0.003% of one core).
+  See v0.3.0-resource-check.json; this is a short in-process observation.
+
+Native Mint apt installation/upgrade/removal, login, overnight/resume, physical
+monitor hotplug, mixed-DPI desktop behavior and Wayland were not repeated.
+Earlier native desktop reports below apply to the versions explicitly named.
+
 ## 0.2.0 seasonal redesign — 11 October 2026
 
 - Passed all **44 tests**: 30 calendar/data/configuration/format/season tests and 14 native GTK checks in an isolated Ubuntu 24.04 private GTK3 runtime with virtual X11 and temporary XDG profiles.
