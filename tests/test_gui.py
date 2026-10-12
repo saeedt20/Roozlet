@@ -451,6 +451,84 @@ class GuiTests(unittest.TestCase):
         self.assertEqual("winter", calendar.hero.scene.season)
         self.assertEqual(.4, settings.preview.scene.intensity)
 
+    def test_about_credits_long_notice_does_not_expand_window(self):
+        self.app.cfg["appearance"]["motion_effects"] = False
+        provider = Gtk.CssProvider()
+        apply(self.app.cfg, provider)
+        screen = Gdk.Screen.get_default()
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.addCleanup(Gtk.StyleContext.remove_provider_for_screen, screen, provider)
+        calendar = self.window(CalendarWindow)
+        about = calendar.show_about()
+        pump()
+        initial = tuple(about.get_size())
+        about.credit_labels[-1].set_text("A very long attribution notice " * 300 + "X" * 1200)
+        credits_button = next(b for b in about.switcher.get_children()
+                              if b.get_child().get_text() == self.app.loc.t("credits"))
+        credits_button.clicked()
+        self.assertEqual("credits", about.stack.get_visible_child_name())
+        for _ in range(8):
+            pump(); time.sleep(.02)
+        self.assertEqual(initial, tuple(about.get_size()))
+        area = about.get_display().get_monitor_at_window(about.get_window()).get_workarea()
+        self.assertLessEqual(about.get_size().width, area.width)
+        self.assertLessEqual(about.get_size().height, area.height - 48)
+        scroll = about.pages["credits"]
+        self.assertEqual((Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC), scroll.get_policy())
+        self.assertGreater(scroll.get_vadjustment().get_upper(), scroll.get_vadjustment().get_page_size())
+        self.assertEqual(1, about.credit_labels[-1].get_width_chars())
+        self.assertEqual(Pango.WrapMode.WORD_CHAR, about.credit_labels[-1].get_line_wrap_mode())
+        about.resize(300, 220)
+        for _ in range(8):
+            pump(); time.sleep(.02)
+        self.assertLessEqual(about.get_size().width, 320)
+        self.assertLessEqual(about.get_size().height, 240)
+
+    def test_about_localization_github_and_lifecycle(self):
+        from rooz.ui.about import PROJECT_URL
+        calendar = self.window(CalendarWindow)
+        for lang in ("fa", "en"):
+            self.app.cfg["language"] = lang
+            about = calendar.show_about()
+            pump()
+            self.assertIs(about, calendar.show_about())
+            self.assertTrue(about.get_modal())
+            self.assertEqual(self.app.loc.t("about_title"), about.get_title())
+            self.assertEqual(Gtk.TextDirection.RTL if lang == "fa" else Gtk.TextDirection.LTR,
+                             about.switcher.get_direction())
+            self.assertEqual("GitHub", about.links["github"].get_label())
+            self.assertEqual(PROJECT_URL, about.links["github"].get_uri())
+            self.assertEqual(PROJECT_URL + "/issues", about.links["issues"].get_uri())
+            self.assertEqual(self.app.loc.t("close"), about.close_button.get_label())
+            for key in ("about", "credits", "licenses"):
+                self.assertEqual(self.app.loc.t(key), about.stack.child_get_property(about.pages[key], "title"))
+            about.key(about, SimpleNamespace(keyval=Gdk.KEY_Escape))
+            self.assertIsNone(calendar.about_window)
+        about = calendar.show_about()
+        calendar.destroy()
+        pump()
+        self.assertIsNone(calendar.about_window)
+
+    def test_about_offline_licenses_are_wrapped_and_complete(self):
+        self.app.cfg["appearance"].update(motion_effects=False, text_scale=1.4, theme="light")
+        calendar = self.window(CalendarWindow)
+        about = calendar.show_about()
+        pump()
+        self.assertEqual(0, about.stack.get_transition_duration())
+        about.stack.set_visible_child_name("licenses")
+        for key, path in about.license_files.items():
+            about.license_choice.set_active_id(key)
+            buf = about.license_text.get_buffer()
+            actual = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), True)
+            self.assertEqual(path.read_text(), actual)
+            self.assertGreater(len(actual), 1000)
+        self.assertEqual(Gtk.WrapMode.WORD_CHAR, about.license_text.get_wrap_mode())
+        self.assertEqual(Gtk.TextDirection.LTR, about.license_text.get_direction())
+        self.assertFalse(about.license_text.get_editable())
+        pump()
+        area = about.get_display().get_monitor_at_window(about.get_window()).get_workarea()
+        self.assertLessEqual(about.get_size().width, area.width)
+
 
 if __name__ == "__main__":
     unittest.main()

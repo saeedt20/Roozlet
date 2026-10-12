@@ -1,3 +1,11 @@
+rooz (0.3.1-1) unstable; urgency=medium
+
+  * Prevent long credits and license text from enlarging the About window.
+  * Localize About, Credits and Licenses with native bounded scrolling pages.
+  * Replace the generic Website label with explicit GitHub project links.
+
+ -- Saeed Taheri <132300919+saeedt20@users.noreply.github.com>  Mon, 12 Oct 2026 11:00:00 +0330
+
 rooz (0.3.0-1) unstable; urgency=medium
 
   * Redesign native calendar and preferences with bilingual navigation.

@@ -57,6 +57,7 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.connect("key-press-event", self.key)
         self.cells = {}
         self.month_picker = None
+        self.about_window = None
         self.connect("destroy", lambda *_: self.dismiss_month_picker())
         self.apply()
         self.show_all()
@@ -90,25 +91,15 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.responsive(self, self.get_allocation())
 
     def show_about(self):
-        from .. import __version__
-        from ..resources import DATA
-        dialog = Gtk.AboutDialog(transient_for=self, modal=True)
-        dialog.set_program_name("روزلت" if self.app.loc.lang == "fa" else "Roozlet")
-        dialog.set_version(__version__)
-        dialog.set_authors(["Saeed Taheri"])
-        dialog.set_website("https://github.com/saeedt20/Roozlet")
-        dialog.set_license_type(Gtk.License.MIT_X11)
-        dialog.set_comments(self.app.loc.t("coverage"))
-        attribution = DATA / "themes/seasons/ATTRIBUTION.md"
-        dialog.add_credit_section(self.app.loc.t("attribution"), [
-            "Vazirmatn — SIL Open Font License 1.1",
-            "University of Tehran Calendar Center — verified 1405 dates and occasions",
-            attribution.read_text() if attribution.is_file() else "Roozlet original seasonal artwork",
-        ])
-        dialog.connect("response", lambda d, _: d.destroy())
-        style_window(dialog, self.app.cfg, self.app.today)
-        dialog.get_style_context().add_class("rooz")
-        dialog.show()
+        from .about import AboutWindow
+        if self.about_window is None:
+            self.about_window = AboutWindow(self)
+            self.about_window.connect("destroy", self.about_closed)
+        self.about_window.present()
+        return self.about_window
+
+    def about_closed(self, *_):
+        self.about_window = None
 
     def navigate(self, delta):
         self.year, self.month = shift_month(self.year, self.month, delta)

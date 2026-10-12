@@ -4,6 +4,32 @@ The original 0.1.0 tests were performed on Linux Mint 22.3 Xfce/X11 with Python 
 PyGObject 3.48.2, Cairo 1.25.1, Xfwm4 4.18.0, Fontconfig 2.15.0 and Poppler 24.02.0.
 Only application window captures belong in docs/screenshots.
 
+## 0.3.1 About/Credits overflow — 12 October 2026
+
+- All **54 tests** passed: 31 logic/data checks and 23 native GTK checks.
+- All **23 GTK checks also passed at 200% scale** in isolated virtual X11.
+- The real Credits switcher button is pressed after inserting a multi-thousand-
+  character notice including a 1,200-character unbroken token. Window size stays
+  unchanged, vertical scrolling is available, horizontal scrolling is disabled,
+  and the themed window can shrink to a 300 × 220 content allocation.
+- About uses the parent monitor work area, with space reserved for window chrome.
+  Persian/English titles, controls and RTL/LTR are checked independently of the
+  desktop locale. GitHub and issue destinations, one-window reuse, Escape and
+  parent destruction are verified.
+- All four complete original license texts match their local files exactly.
+  License text retains LTR independently of Persian controls; motion opt-out and
+  the existing reduced-motion gate remain supported.
+- Six actual About/Credits/Licenses captures (Persian dark and English light) were
+  reviewed. These are native GTK captures, not generated design mockups.
+- The extracted .deb was launched from /tmp with temporary XDG settings. Version,
+  installed resources, unchanged Credits size, four installed license files and
+  the real Close callback passed. Native Mint apt upgrade/login/suspend/physical
+  monitor lifecycle was not repeated.
+- Annual validation remains unchanged: 365 dates, 305 occasions and 26 statutory
+  public-holiday dates, with no validation issues.
+- The headless-command test now preserves an injected dependency PYTHONPATH so
+  subprocesses use the same private GTK runtime as the parent test process.
+
 ## 0.3.0 calendar/settings and motion — 12 October 2026
 
 - All **51 tests** passed: 31 calendar/data/configuration/format/season checks and

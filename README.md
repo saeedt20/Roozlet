@@ -47,6 +47,16 @@ design mockups or a claim of a native Mint installation test.
 ![Persian preferences with right-aligned sidebar](docs/screenshots/v0.3.0-settings-fa-dark.png)
 ![English preferences with left-aligned sidebar](docs/screenshots/v0.3.0-settings-en-dark.png)
 
+### Fixed in 0.3.1
+
+- About, Credits and Licenses now use localized, work-area-sized scrolling pages.
+- Long artwork notices and unbroken text wrap without enlarging the window.
+- Explicit **GitHub** and **Report an issue** links, an actual native app mark and offline original license texts.
+- Persian RTL and English LTR follow the app language independently of system translations.
+
+![Persian About and credits](docs/screenshots/v0.3.1-credits-fa-dark.png)
+![English About](docs/screenshots/v0.3.1-about-en-light.png)
+
 ### New in 0.3.0
 
 - Scenic calendar header, quiet date grid and a selected-day card with one **Copy date** dropdown, including numerical variants.
@@ -97,11 +107,11 @@ Full calendar at 200% scale on a constrained work area; scroll to reach the lowe
 
 ## Install
 
-Download `roozlet_0.3.0-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
+Download `roozlet_0.3.1-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
 From the folder containing the downloaded file:
 
 ```bash
-sudo apt install ./roozlet_0.3.0-1_all.deb
+sudo apt install ./roozlet_0.3.1-1_all.deb
 rooz
 ```
 
@@ -195,7 +205,7 @@ python3 scripts/validate-data.py
 GDK_SCALE=2 ./scripts/test-gui.sh
 ```
 
-Version 0.3.0 passes **51 tests**, including **20 GTK checks**, also checked at 200% scaling. The GTK checks need an active display or Xvfb. They use temporary XDG directories
+Version 0.3.1 passes **54 tests**, including **23 GTK checks**, also checked at 200% scaling. The GTK checks need an active display or Xvfb. They use temporary XDG directories
 and a private D-Bus session. The original 0.1.0 validation includes **20 core tests**, **seven
 GTK checks at each scale**, **21 native Xfce interaction checks**, installed-layout
 launches, Persian clipboard round trips and reproducible package builds.

@@ -327,7 +327,8 @@ class LocalizationTests(unittest.TestCase):
         )
 
     def test_headless_commands(self):
-        env = {**os.environ, "DISPLAY": "", "WAYLAND_DISPLAY": "", "PYTHONPATH": str(ROOT / "src")}
+        env = {**os.environ, "DISPLAY": "", "WAYLAND_DISPLAY": "",
+               "PYTHONPATH": os.pathsep.join(filter(None, (str(ROOT / "src"), os.environ.get("PYTHONPATH"))))}
         for arg in ("--version", "--check-data"):
             result = subprocess.run(
                 [sys.executable, "-m", "rooz", arg], env=env, capture_output=True, text=True
