@@ -94,6 +94,7 @@ def apply(cfg, provider, today=None):
         .rooz .preferences-group,.rooz .details-panel {{ background:{panel}; border:1px solid {t["line"]}; border-radius:12px; }}
         .rooz .preference-row {{ padding:12px; }}
         .rooz .details-panel {{ padding:14px; }}
+        .rooz button.search-result {{ background:{panel}; border:1px solid {t["line"]}; padding:12px; }}
         .rooz .detail-heading {{ font-size:{size*1.10}px; font-weight:600; }}
         .rooz button.copy-button {{ border:1px solid {t["line"]}; background-color:alpha({t["muted"]},.05); }}
         .rooz .preview-date {{ background-color:alpha({t["bg"]},.88); border:1px solid alpha({t["muted"]},.18); border-radius:10px; padding:8px; }}

@@ -25,6 +25,26 @@ it works offline and stays out of the way.
 The visible application name is **Roozlet / روزلت**. The established `rooz` command
 and Debian package identity remain unchanged so existing installations upgrade normally.
 
+## New in 0.4.0: search, notes and reminders
+
+- **Quick search:** press Ctrl+F/Ctrl+K or choose Search. Enter a Shamsi/Gregorian date, a Persian/English occasion, or words from your personal entries. Persian, Arabic and Latin digits are accepted. Enter or click a result to open its actual day and month.
+- **Personal entries:** add notes, birthdays, appointments and tasks with Ctrl+N or Add entry. Edit saved entries, mark one occurrence done, and undo deletion. Personal days have a separate ◇ marker; they never become official public holidays.
+- **Repeat:** one-time, daily, weekly or yearly in the Shamsi calendar. Esfand 30 anniversaries use Esfand's last day in non-leap years.
+- **Optional notifications:** off by default. Enable Desktop notifications in Notes & reminders or Settings → Desktop & startup, and opt in on each entry. A Test notification button checks the desktop service.
+- **Local storage:** an owner-only SQLite database stores personal entries and delivery state. Upgrades preserve it; there are no cloud accounts or runtime Internet requests.
+
+Reminders are checked every 30 seconds **while Roozlet runs**. Start at login remains optional. Startup/resume checks missed reminders from the previous 24 hours, with at most five sends per poll. Service failures are retried after two minutes. Accepted deliveries are recorded so reopening Roozlet does not resend the same occurrence. Display and click actions depend on your desktop notification service; actions work while Roozlet is running.
+
+Search covers all loaded occasions independently of the visible-category filter. Official annual/Hijri coverage is still **1405 only**; personal entries and date jumps work across the supported 1350–1450 Shamsi range.
+
+These are real native GTK captures using **synthetic demo entries**, not actual user notes:
+
+![Persian notes and reminders](docs/screenshots/v0.4.0-personal-fa-dark.png)
+![Persian editor](docs/screenshots/v0.4.0-editor-fa-dark.png)
+![English search](docs/screenshots/v0.4.0-search-en-light.png)
+
+See [personal-entry behavior and storage](docs/PERSONAL.md) for recurrence, missed alerts and backup details.
+
 ## Four seasons, one compact calendar
 
 Roozlet includes **Spring, Summer, Autumn and Winter** appearances with bundled
@@ -107,15 +127,17 @@ Full calendar at 200% scale on a constrained work area; scroll to reach the lowe
 
 ## Install
 
-Download `roozlet_0.3.1-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
+Download `roozlet_0.4.0-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
 From the folder containing the downloaded file:
 
 ```bash
-sudo apt install ./roozlet_0.3.1-1_all.deb
+install -m 644 ./roozlet_0.4.0-1_all.deb /tmp/roozlet_0.4.0-1_all.deb
+rooz --quit
+sudo apt install /tmp/roozlet_0.4.0-1_all.deb
 rooz
 ```
 
-APT resolves the native GTK, Cairo, Fontconfig and timezone dependencies.
+The readable /tmp copy avoids the `_apt` permission notice caused by private home folders. APT resolves the native GTK, Cairo, Fontconfig and timezone dependencies.
 Installation adds a desktop launcher; it does not start the app or enable login startup.
 Run the app as your ordinary user.
 
@@ -136,6 +158,8 @@ Closing the calendar or Settings leaves the card running. The **Copy date** menu
 | `rooz` | Start the card; a repeat invocation raises the calendar |
 | `rooz --widget` | Start or retain card mode, without opening the month view |
 | `rooz --calendar` | Open or raise the month view |
+| `rooz --search` | Open date, occasion and personal-entry search |
+| `rooz --personal` | Open notes and reminders |
 | `rooz --settings` | Open or raise Settings |
 | `rooz --reset-position` | Restore a safe default card position |
 | `rooz --check-data` | Report installed calendar coverage and validation |
@@ -205,7 +229,7 @@ python3 scripts/validate-data.py
 GDK_SCALE=2 ./scripts/test-gui.sh
 ```
 
-Version 0.3.1 passes **54 tests**, including **23 GTK checks**, also checked at 200% scaling. The GTK checks need an active display or Xvfb. They use temporary XDG directories
+Version 0.4.0 passes **83 tests**: 47 logic/data checks, 30 GTK checks and six native notification protocol checks. The complete suite also passed at 200% scaling. The GTK checks need an active display or Xvfb. They use temporary XDG directories
 and a private D-Bus session. The original 0.1.0 validation includes **20 core tests**, **seven
 GTK checks at each scale**, **21 native Xfce interaction checks**, installed-layout
 launches, Persian clipboard round trips and reproducible package builds.

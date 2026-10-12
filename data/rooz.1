@@ -1,9 +1,9 @@
-.TH ROOZ 1 "October 2026" "Rooz 0.1.0"
+.TH ROOZ 1 "October 2026" "Roozlet 0.4.0"
 .SH NAME
 rooz \- compact offline Persian calendar for Xfce
 .SH SYNOPSIS
 .B rooz
-[--widget | --calendar | --settings | --reset-position | --quit | --check-data | --version]
+[--widget | --calendar | --search | --personal | --settings | --reset-position | --quit | --check-data | --version]
 .SH DESCRIPTION
 Rooz is a single-instance desktop date card. Double-click opens the month view.
 The default civil timezone is Asia/Tehran. Interface language and digits are independent.
@@ -20,6 +20,12 @@ Open or raise the existing month window.
 .B --settings
 Open bilingual preferences.
 .TP
+.B --search
+Open offline date, occasion and personal-entry search. Ctrl+F in the calendar also opens search.
+.TP
+.B --personal
+Open notes and reminders. Ctrl+N in the calendar adds an entry to the selected day.
+.TP
 .B --reset-position
 Return the card to the primary monitor's upper-right work area.
 .TP
@@ -32,6 +38,14 @@ Validate and report annual data without a graphical display.
 .B --version
 Print the app version without a graphical display.
 .SH FILES
-XDG_CONFIG_HOME/rooz/config.json; XDG_DATA_HOME/rooz/calendars/; XDG_CONFIG_HOME/autostart/rooz.desktop
+XDG_CONFIG_HOME/rooz/config.json; XDG_DATA_HOME/rooz/calendars/; XDG_DATA_HOME/rooz/personal.sqlite3; XDG_CONFIG_HOME/autostart/rooz.desktop
 .SH NOTES
 Login startup is opt-in. No network requests or privileged background service are used.
+Desktop notifications are off by default. Enable them in Desktop & startup settings
+or Notes & reminders, then select notification for each entry.
+Reminders are checked every 30 seconds while Roozlet runs; startup and resume catch
+missed occurrences from the preceding 24 hours. Delivery depends on the desktop service.
+Entries may repeat daily, weekly, or annually in the Shamsi calendar.
+Esfand 30 anniversaries use Esfand's last day in non-leap years.
+Completion applies to the selected occurrence. Delete is reversible with Undo.
+User notes are stored locally with owner-only filesystem permissions and preserved on upgrade.

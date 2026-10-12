@@ -1,0 +1,9 @@
+{
+  "context": "Ubuntu 24.04 private GTK3 runtime, virtual X11; Roozlet 0.4.0 seasonal widget only, temporary XDG profile",
+  "duration_seconds": 35.01,
+  "cpu_seconds": 0.0006,
+  "cpu_percent_one_core": 0.002,
+  "rss_start_kib": 76408,
+  "rss_end_kib": 76412,
+  "limitations": "Short in-process observation; no native Xfce, endurance, login or overnight/resume claim."
+}

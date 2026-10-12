@@ -23,7 +23,9 @@ with (
         if (
             not p.is_file()
             or any(part in EXCLUDED or part.startswith(".venv") for part in rel.parts)
-            or p.suffix.lower() in (".pdf", ".pyc", ".deb")
+            or p.suffix.lower() in (".pdf", ".pyc", ".deb", ".db", ".sqlite", ".sqlite3")
+            or any(p.name.endswith(ext + tail) for ext in (".db", ".sqlite", ".sqlite3")
+                   for tail in ("-wal", "-shm", "-journal"))
             or rel.parts[:2] == ("debian", "rooz")
         ):
             continue

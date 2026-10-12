@@ -1,6 +1,7 @@
 """GTK smoke checks; run on a real or virtual display in an isolated D-Bus session."""
 
-import copy, os, time, unittest
+import copy, os, time, unittest, tempfile
+from pathlib import Path
 from datetime import date
 from types import SimpleNamespace
 import gi
@@ -19,6 +20,7 @@ from rooz.ui.calendar_window import CalendarWindow
 from rooz.ui.settings import Settings
 from rooz.ui.theme import apply, rgb, tokens
 from rooz.calendar_service import MIN_YEAR, MAX_YEAR, gregorian
+from rooz.personal import PersonalStore
 
 
 def pump():
@@ -58,6 +60,20 @@ class GuiTests(unittest.TestCase):
             def change(self, s, k, v):
                 self.cfg[s][k] = v
 
+            def test_notification(self):
+                self.actions.append("test_notification")
+
+            def personal_changed(self):
+                for window in self.get_windows():
+                    if isinstance(window, CalendarWindow):
+                        window.apply()
+
+            def open_search(self):
+                self.actions.append("search")
+
+            def open_personal(self):
+                self.actions.append("personal")
+
             def copy(self, *args, **kwargs):
                 self.actions.append(("copy", args, kwargs))
 
@@ -74,11 +90,18 @@ class GuiTests(unittest.TestCase):
         self.app.loc = Localizer(self.app.cfg)
         self.app.actions = []
         self.windows = []
+        self.personal_home = tempfile.TemporaryDirectory()
+        self.app.personal = PersonalStore(Path(self.personal_home.name) / "personal.sqlite3")
+        self.app.last_deleted = None
+        self.app.notification_available = None
+        self.app.personal_error = False
 
     def tearDown(self):
         for w in self.windows:
             w.destroy()
         pump()
+        self.app.personal.close()
+        self.personal_home.cleanup()
 
     def window(self, kind):
         w = kind(self.app)
@@ -528,6 +551,148 @@ class GuiTests(unittest.TestCase):
         pump()
         area = about.get_display().get_monitor_at_window(about.get_window()).get_workarea()
         self.assertLessEqual(about.get_size().width, area.width)
+
+    def test_search_shortcut_date_jump_and_validation(self):
+        calendar = self.window(CalendarWindow)
+        calendar.key(calendar, SimpleNamespace(keyval=Gdk.KEY_f, state=Gdk.ModifierType.CONTROL_MASK))
+        window = calendar.search_window
+        self.assertIsNotNone(window)
+        window.entry.set_text("۱۴۰۵/۱/۱")
+        window.activate_first()
+        self.assertEqual(gregorian(1405, 1, 1), calendar.selected)
+        self.assertEqual((1405, 1), (calendar.year, calendar.month))
+        self.assertIsNone(calendar.search_window)
+        window = calendar.open_search()
+        window.entry.set_text("1405/13/4")
+        window.activate_first()
+        self.assertEqual([], window.result_values)
+        self.assertEqual(self.app.loc.t("invalid_date"), window.status.get_text())
+        window.entry.set_text("حافظ")
+        window.run_search()
+        self.assertTrue(window.result_values)
+        expected = window.result_values[0].day
+        window.results.get_children()[0].clicked()
+        self.assertEqual(expected, calendar.selected)
+        self.assertIsNone(calendar.search_window)
+
+    def test_personal_editor_save_marker_search_and_edit(self):
+        calendar = self.window(CalendarWindow)
+        editor = calendar.open_personal_editor(calendar.selected)
+        editor.title_entry.set_text("یادداشت آزمایشی")
+        editor.body.get_buffer().set_text("متن شخصی <b>literal</b>")
+        editor.save_button.clicked()
+        pump()
+        self.assertIsNone(calendar.personal_editor)
+        item = self.app.personal.items()[0]
+        self.assertEqual("متن شخصی <b>literal</b>", item["body"])
+        self.assertIn("یادداشت آزمایشی", calendar.cells[calendar.selected].get_tooltip_text())
+        window = calendar.open_search()
+        window.entry.set_text("literal")
+        window.run_search()
+        self.assertEqual(item["id"], window.result_values[0].item_id)
+        window.destroy()
+        editor = calendar.open_personal_editor(calendar.selected, item["id"])
+        self.assertEqual(item["body"], editor.body.get_buffer().get_text(
+            editor.body.get_buffer().get_start_iter(), editor.body.get_buffer().get_end_iter(), True))
+        editor.title_entry.set_text("ویرایش‌شده")
+        editor.save_button.clicked()
+        self.assertEqual("ویرایش‌شده", self.app.personal.get(item["id"])["title"])
+
+    def test_personal_task_completion_delete_and_undo_controls(self):
+        calendar = self.window(CalendarWindow)
+        key = self.app.personal.save("Task", "", calendar.selected, "task", notify=True)
+        calendar.apply()
+        calendar.personal_view.rows[key]["done"].set_active(True)
+        self.assertTrue(self.app.personal.on(calendar.selected)[0].done)
+        calendar.personal_view.rows[key]["delete"].clicked()
+        self.assertEqual([], self.app.personal.items())
+        calendar.personal_view.undo_button.clicked()
+        self.assertEqual(key, self.app.personal.items()[0]["id"])
+        self.assertTrue(self.app.personal.on(calendar.selected)[0].done)
+        calendar.show_view("personal")
+        calendar.personal_view.mode.set_active_id("selected_day")
+        self.assertEqual(key, next(iter(calendar.personal_view.rows)))
+
+    def test_editor_validation_unsaved_draft_repeat_and_notification_opt_in(self):
+        calendar = self.window(CalendarWindow)
+        editor = calendar.open_personal_editor(calendar.selected)
+        editor.title_entry.set_text("Birthday")
+        editor.kind.set_active_id("birthday")
+        self.assertEqual("annual", editor.repeat.get_active_id())
+        editor.date_mode.set_active_id("gregorian")
+        self.assertEqual(calendar.selected, __import__("rooz.search", fromlist=["parse_date"]).parse_date(editor.date_entry.get_text(), "gregorian"))
+        editor.notify.set_active(True)
+        self.assertTrue(editor.enable_notifications.get_visible())
+        self.assertFalse(self.app.cfg["personal"]["notifications_enabled"])
+        editor.enable_notifications.clicked()
+        self.assertTrue(self.app.cfg["personal"]["notifications_enabled"])
+        editor.time_entry.set_text("25:00")
+        editor.save_button.clicked()
+        self.assertEqual([], self.app.personal.items())
+        self.assertEqual(self.app.loc.t("invalid_time"), editor.error.get_text())
+        editor.request_close()
+        self.assertTrue(editor.get_visible())
+        self.assertTrue(editor.discard_button.get_visible())
+        self.assertEqual("Birthday", editor.title_entry.get_text())
+        editor.discard_button.clicked()
+        self.assertIsNone(calendar.personal_editor)
+
+    def test_personal_read_error_keeps_calendar_and_official_data_available(self):
+        from unittest.mock import patch
+        from rooz.personal import PersonalError
+        with patch.object(self.app.personal, "on", side_effect=PersonalError("Synthetic read failure")):
+            calendar = self.window(CalendarWindow)
+            self.assertEqual(30, len(calendar.cells))
+            self.assertFalse(calendar.personal_view.add_button.get_sensitive())
+            self.assertTrue(self.app.personal_error)
+        self.app.personal_error = False
+
+    def test_failed_completion_does_not_show_a_false_saved_state(self):
+        calendar = self.window(CalendarWindow)
+        key = self.app.personal.save("Task", "", calendar.selected, "task")
+        calendar.apply()
+        self.app.personal.connection.execute("PRAGMA query_only=ON")
+        calendar.personal_view.rows[key]["done"].set_active(True)
+        self.assertFalse(self.app.personal.on(calendar.selected)[0].done)
+        self.assertFalse(calendar.personal_view.rows[key]["done"].get_active())
+        self.assertTrue(calendar.personal_view.data_warning.get_visible())
+        self.app.personal.connection.execute("PRAGMA query_only=OFF")
+
+    def test_bilingual_search_editor_preferences_and_window_bounds(self):
+        self.app.cfg["appearance"].update(text_scale=1.4, theme="light")
+        provider = Gtk.CssProvider()
+        apply(self.app.cfg, provider)
+        screen = Gdk.Screen.get_default()
+        Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        self.addCleanup(Gtk.StyleContext.remove_provider_for_screen, screen, provider)
+        calendar = self.window(CalendarWindow)
+        settings = self.window(Settings)
+        settings.show_page("desktop")
+        self.assertFalse(settings.notification_test.get_sensitive())
+        settings.controls["personal", "notifications_enabled"].set_active(True)
+        self.assertTrue(settings.notification_test.get_sensitive())
+        settings.notification_test.clicked()
+        self.assertIn("test_notification", self.app.actions)
+        for lang in ("fa", "en"):
+            self.app.cfg["language"] = lang
+            window = calendar.open_search()
+            editor = calendar.open_personal_editor(calendar.selected)
+            expected = Gtk.TextDirection.RTL if lang == "fa" else Gtk.TextDirection.LTR
+            self.assertEqual(expected, window.root.get_direction())
+            self.assertEqual(expected, editor.root.get_direction())
+            editor.title_entry.set_text("Draft survives language changes")
+            editor.refresh_locale()
+            self.assertEqual("Draft survives language changes", editor.title_entry.get_text())
+            area = calendar.get_display().get_monitor_at_window(calendar.get_window()).get_workarea()
+            pump()
+            for popup in (window, editor):
+                self.assertLessEqual(popup.get_size().width, area.width)
+                self.assertLessEqual(popup.get_size().height, area.height)
+            window.entry.set_text("test")
+            window.changed()
+            window.destroy()
+            self.assertEqual(0, window.timeout)
+            editor.destroy()
 
 
 if __name__ == "__main__":

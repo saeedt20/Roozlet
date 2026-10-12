@@ -1,3 +1,5 @@
+> **0.4.0 update:** Native search and personal-entry flows are implemented as specified in [PERSONAL.md](PERSONAL.md), with separate personal markers and optional desktop notifications. The compact widget dimensions and existing seasonal styles are preserved.
+
 # Version 0.3 interface
 
 See [UI_0.3.md](UI_0.3.md) for the implemented bilingual layout, preferences and bounded motion contract. It replaces the older fixed weekday order and notebook settings. The content fades are native GTK; scene frames exist only during a 260 ms change. Existing date services and widget geometry are preserved.
