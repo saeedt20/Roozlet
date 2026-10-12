@@ -298,6 +298,11 @@ class Card(Gtk.ApplicationWindow):
         w, h = self.dimensions()
         s = self.layout_scale()
         t = tokens(self.cfg, self.app.today)
+        # Resolve artwork from the same live date/settings snapshot as the icon.
+        # A queued draw after resume or a preference change must not paint a
+        # previously cached season beside the new date/colour.
+        self.artwork_transition.cfg = self.cfg
+        self.artwork_transition.set_scene(t["season"] if t["seasonal"] and self.cfg["appearance"]["show_artwork"] else None)
         loc, a = self.app.loc, self.cfg["appearance"]
         ts = a["text_scale"]
         ys = max(1, ts)
@@ -360,7 +365,7 @@ class Card(Gtk.ApplicationWindow):
         rtl = loc.lang == "fa"
         text("روزلت" if rtl else "Roozlet", 54 if rtl else 40, 11, 228,
              12, "fg", 600, Pango.Alignment.RIGHT if rtl else Pango.Alignment.LEFT)
-        seasonal(cr, "autumn", 286 if rtl else 14, 11, 18, t["accent_text"])
+        seasonal(cr, t["season"], 286 if rtl else 14, 11, 18, t["accent_text"])
         text(WEEKDAYS[loc.lang][self.app.today.weekday()], 16, 39*ys, 288, 11, "muted")
         day = self.app.today
         j = jalali(day)

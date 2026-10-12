@@ -39,7 +39,13 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.sidebar.set_no_show_all(True)
         self.shell = Gtk.Box(spacing=4)
         self.shell.set_direction(Gtk.TextDirection.LTR)
-        self.shell.pack_start(self.outer, True, True, 0)
+        self.page_stack = Gtk.Stack()
+        self.page_stack.set_hhomogeneous(False)
+        self.page_stack.set_vhomogeneous(False)
+        self.page_stack.set_interpolate_size(False)
+        self.page_stack.add_named(self.outer, "calendar")
+        self.panes = {}
+        self.shell.pack_start(self.page_stack, True, True, 0)
         self.shell.pack_start(self.sidebar, False, False, 0)
         self.add(self.shell)
         self.header_bar = Gtk.HeaderBar(show_close_button=True)
@@ -82,40 +88,91 @@ class CalendarWindow(Gtk.ApplicationWindow):
             self.hero.scene.set_size_request(-1, round((156 if narrow else 124) * max(1, self.app.cfg["appearance"]["text_scale"])))
 
     def show_view(self, view):
+        if self.view == view and (view not in ("settings", "search", "about") or view in self.panes):
+            if view == "search":
+                self.panes[view].refresh_locale()
+                self.panes[view].entry.grab_focus()
+            return
         self.view = view
         self.apply(animate=True)
 
     def refresh_appearance(self):
         """Scenery and typography updates keep current cells, selection and focus."""
-        style_window(self, self.app.cfg, self.app.today, self.month)
+        viewed = self.month if self.view in ("calendar", "occasions") else None
+        style_window(self, self.app.cfg, self.app.today, viewed)
         self.hero.sync(self.month)
         for menu in (self.compact_menu.get_popup(), getattr(self, "copy_menu", None)):
             if menu:
                 style_window(menu, self.app.cfg, self.app.today, self.month)
         if not enabled(self.app.cfg, self):
+            self.page_stack.set_transition_type(Gtk.StackTransitionType.NONE)
+            self.page_stack.set_transition_duration(0)
             self.body_stack.set_transition_type(Gtk.StackTransitionType.NONE)
             self.body_stack.set_transition_duration(0)
             self.body_stack.prune(force=True)
         self.responsive(self, self.get_allocation())
 
     def show_about(self):
-        from .about import AboutWindow
-        if self.about_window is None:
-            self.about_window = AboutWindow(self)
-            self.about_window.connect("destroy", self.about_closed)
-        self.about_window.present()
-        return self.about_window
-
-    def about_closed(self, *_):
-        self.about_window = None
+        self.show_view("about")
+        return self.panes["about"]
 
     def open_search(self):
-        from .search_window import SearchWindow
-        if self.search_window is None:
-            self.search_window = SearchWindow(self)
-            self.search_window.connect("destroy", lambda *_: setattr(self, "search_window", None))
-        self.search_window.present()
+        self.show_view("search")
         return self.search_window
+
+    def show_pane(self, animate):
+        from .settings import SettingsPane
+        from .search_window import SearchPane
+        from .about import AboutPane
+        kind = {"settings": SettingsPane, "search": SearchPane, "about": AboutPane}[self.view]
+        pane = self.panes.get(self.view)
+        locale_key = (self.app.loc.lang, self.app.cfg["digits"],
+                      self.app.cfg["appearance"]["font_mode"],
+                      self.app.cfg["appearance"]["custom_font_family"])
+        if pane is not None and self.view == "about" and pane.locale_key != locale_key:
+            self.page_stack.remove(pane)
+            pane.destroy()
+            pane = None
+        if pane is None:
+            pane = kind(self.app if self.view == "settings" else self)
+            pane.locale_key = locale_key
+            self.panes[self.view] = pane
+            self.page_stack.add_named(pane, self.view)
+            pane.connect("destroy", self.pane_closed, self.view)
+            if self.view == "settings":
+                self.app.settings = pane
+            elif self.view == "search":
+                self.search_window = pane
+        elif self.view == "settings":
+            if pane.locale_key != locale_key:
+                pane.apply()
+                pane.locale_key = locale_key
+            else:
+                pane.refresh_appearance()
+        elif self.view == "search":
+            pane.refresh_locale()
+        pane.show_all()
+        style_window(pane, self.app.cfg, self.app.today)
+        if self.view == "about":
+            pane.stack.set_transition_duration(160 if enabled(self.app.cfg, self) else 0)
+            pane.stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE if enabled(self.app.cfg, self)
+                                           else Gtk.StackTransitionType.NONE)
+        if self.view == "settings":
+            pane.responsive(pane, pane.get_allocation())
+        self.page_stack.set_transition_duration(160 if animate and enabled(self.app.cfg, self) else 0)
+        self.page_stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE if animate and enabled(self.app.cfg, self)
+                                            else Gtk.StackTransitionType.NONE)
+        self.page_stack.set_visible_child(pane)
+        if self.view == "search":
+            pane.entry.grab_focus()
+
+    def pane_closed(self, pane, key):
+        if self.panes.get(key) is pane:
+            self.panes.pop(key)
+        if key == "search" and self.search_window is pane:
+            self.search_window = None
+        if key == "settings" and getattr(self.app, "settings", None) is pane:
+            self.app.settings = None
 
     def open_personal_editor(self, day, item_id=None):
         from .personal import PersonalEditor
@@ -204,6 +261,9 @@ class CalendarWindow(Gtk.ApplicationWindow):
             if self.month_picker:
                 self.dismiss_month_picker()
                 return True
+            if self.view in ("settings", "search", "about"):
+                self.show_view("calendar")
+                return True
             self.hide()
             return True
         # Only date-cell focus overrides arrows, preserving native control navigation.
@@ -240,8 +300,8 @@ class CalendarWindow(Gtk.ApplicationWindow):
         loc, repo, cfg = self.app.loc, self.app.repo, self.app.cfg
         rtl = loc.lang == "fa"
         self.set_direction(Gtk.TextDirection.RTL if rtl else Gtk.TextDirection.LTR)
-        style_window(self, cfg, self.app.today, self.month)
-        title_text = "روزلت · تقویم" if rtl else "Roozlet · Calendar"
+        style_window(self, cfg, self.app.today, self.month if self.view in ("calendar", "occasions") else None)
+        title_text = ("روزلت" if rtl else "Roozlet") + " · " + loc.t(self.view)
         self.set_title(title_text)
         self.header_bar.set_title(title_text)
         self.search_button.set_tooltip_text(loc.t("search") + " · Ctrl+F")
@@ -257,7 +317,7 @@ class CalendarWindow(Gtk.ApplicationWindow):
                    ("search", "edit-find-symbolic", self.open_search),
                    ("personal", "accessories-text-editor-symbolic", lambda: self.show_view("personal")),
                    ("settings", "emblem-system-symbolic", self.app.open_settings),
-                   ("about", "help-about-symbolic", self.show_about)]
+                   ("about", "help-about-symbolic", lambda: self.show_view("about"))]
         popup = Gtk.Menu()
         popup.get_style_context().add_class("rooz")
         style_window(popup, cfg, self.app.today, self.month)
@@ -280,6 +340,19 @@ class CalendarWindow(Gtk.ApplicationWindow):
         if old_popup:
             old_popup.destroy()
         self.compact_menu.set_tooltip_text(loc.t("open"))
+        if self.view in ("settings", "search", "about"):
+            self.show_pane(animate and was_visible)
+            self.show_all()
+            self.responsive(self, self.get_allocation())
+            if self.view == "settings":
+                self.panes["settings"].responsive(self.panes["settings"], self.panes["settings"].get_allocation())
+            if not was_visible:
+                self.hide()
+            return
+        self.page_stack.set_transition_duration(160 if animate and was_visible and enabled(cfg, self) else 0)
+        self.page_stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE if animate and was_visible and enabled(cfg, self)
+                                            else Gtk.StackTransitionType.NONE)
+        self.page_stack.set_visible_child(self.outer)
         self.hero.sync(self.month)
         clear(self.hero.content)
         header = Gtk.Box(spacing=12)

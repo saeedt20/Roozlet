@@ -12,27 +12,22 @@ from .theme import style_window
 PROJECT_URL = "https://github.com/saeedt20/Roozlet"
 
 
-class AboutWindow(Gtk.Window):
-    def __init__(self, parent):
-        self.app = parent.app
+class AboutContent:
+    def build(self, parent):
+        self.parent, self.app = parent, parent.app
         loc = self.app.loc
-        super().__init__(transient_for=parent, modal=True, title=loc.t("about_title"))
-        self.set_destroy_with_parent(True)
-        self.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+        self.set_direction(Gtk.TextDirection.RTL if loc.lang == "fa" else Gtk.TextDirection.LTR)
         self.get_style_context().add_class("rooz")
         style_window(self, self.app.cfg, self.app.today)
-        display = parent.get_display()
-        monitor = (display.get_monitor_at_window(parent.get_window()) if parent.get_window()
-                   else display.get_primary_monitor() or display.get_monitor(0))
-        area = monitor.get_workarea()
-        self.set_default_size(min(560, max(240, area.width - 48)),
-                              min(560, max(180, area.height - 120)))
-        self.set_size_request(240, 180)
-        self.header = Gtk.HeaderBar(title=loc.t("about_title"), show_close_button=True)
-        self.set_titlebar(self.header)
+        self.header = Gtk.HeaderBar(title=loc.t("about_title"), show_close_button=not self.embedded)
+        if not self.embedded:
+            self.set_titlebar(self.header)
         shell = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         shell.set_border_width(16)
-        self.add(shell)
+        if self.embedded:
+            self.pack_start(shell, True, True, 0)
+        else:
+            self.add(shell)
         self.stack = Gtk.Stack()
         self.stack.set_transition_duration(160 if enabled(self.app.cfg, self) else 0)
         self.stack.set_transition_type(Gtk.StackTransitionType.CROSSFADE
@@ -52,14 +47,15 @@ class AboutWindow(Gtk.Window):
         self.license_page = self.page("licenses", loc.t("licenses"))
         self.build_licenses(loc)
         shell.pack_start(self.stack, True, True, 0)
-        self.close_button = button(loc.t("close"), self.destroy)
+        self.close_button = button(loc.t("calendar") if self.embedded else loc.t("close"), self.finish)
         self.close_button.set_halign(Gtk.Align.END)
         shell.pack_start(self.close_button, False, False, 0)
         direction(shell, loc.lang == "fa")
         direction(self.header, loc.lang == "fa")
         # License originals retain their own writing direction, independently of UI.
         self.license_text.set_direction(Gtk.TextDirection.LTR)
-        self.connect("key-press-event", self.key)
+        if not self.embedded:
+            self.connect("key-press-event", self.key)
         self.show_all()
 
     def page(self, key, title):
@@ -160,6 +156,35 @@ class AboutWindow(Gtk.Window):
 
     def key(self, _, event):
         if event.keyval == Gdk.KEY_Escape:
-            self.destroy()
+            self.finish()
             return True
         return False
+
+
+    def finish(self):
+        if self.embedded:
+            self.parent.show_view("calendar")
+        else:
+            self.destroy()
+
+
+class AboutWindow(AboutContent, Gtk.Window):
+    embedded = False
+
+    def __init__(self, parent):
+        Gtk.Window.__init__(self, transient_for=parent, modal=True, title=parent.app.loc.t("about_title"))
+        self.set_destroy_with_parent(True)
+        self.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+        monitor = parent.get_display().get_monitor_at_window(parent.get_window())
+        area = monitor.get_workarea()
+        self.set_default_size(min(560, max(240, area.width - 48)), min(560, max(180, area.height - 120)))
+        self.set_size_request(240, 180)
+        self.build(parent)
+
+
+class AboutPane(AboutContent, Gtk.Box):
+    embedded = True
+
+    def __init__(self, parent):
+        Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL)
+        self.build(parent)

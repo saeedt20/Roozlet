@@ -61,7 +61,6 @@ def main(argv=None):
     from .formatting import dates
     from .ui import theme
     from .ui.calendar_window import CalendarWindow
-    from .ui.settings import Settings
     from .ui.widget import Card
     from .personal import PersonalStore, PersonalError, ReminderEngine, Occurrence
     from .notifications import DesktopNotifier
@@ -147,12 +146,8 @@ def main(argv=None):
             self.calendar.present()
 
         def open_settings(self):
-            if self.settings is None:
-                self.settings = Settings(self)
-            else:
-                self.settings.apply()
-            self.settings.show()
-            self.settings.present()
+            self.open_calendar()
+            self.calendar.show_view("settings")
 
         def open_search(self):
             self.open_calendar()

@@ -1,3 +1,5 @@
+> **0.4.1 update:** [UI_0.4.1.md](UI_0.4.1.md) places Settings, Search and About inside the existing calendar shell. This supersedes older separate-window navigation requirements. Calendar accuracy, privacy and offline behavior remain unchanged.
+
 > **0.4.0 update:** [PERSONAL.md](PERSONAL.md) defines offline search, private notes and opt-in reminder behavior. It supersedes the older later-enhancements exclusion for these features. Existing calendar accuracy and offline rules remain applicable.
 
 > **0.3.0 update:** [UI_0.3.md](UI_0.3.md) supersedes older calendar/settings layout and motion rules. Persian uses RTL, English uses LTR including weekday columns, with Saturday first in both. All accuracy, offline and compatibility rules remain applicable.
