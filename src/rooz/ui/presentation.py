@@ -15,22 +15,29 @@ class ScenicSurface(Gtk.Overlay):
         self.app = app
         self.get_style_context().add_class("hero")
         self.scene = ScenicBand(None, height, cfg=app.cfg, shade=True)
+        self.viewed_month = None
+        self.scene.resolve = self.artwork_state
         self.add(self.scene)
         self.content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         self.content.set_border_width(16)
         self.add_overlay(self.content)
 
-    def sync(self, viewed_month=None):
+    def artwork_state(self):
         cfg = self.app.cfg
         a = cfg["appearance"]
         visible = a["style"] == "seasonal" and a["show_artwork"] and a["artwork_intensity"] > 0
-        season = effective_season(cfg, self.app.today, viewed_month)
+        season = effective_season(cfg, self.app.today, self.viewed_month)
         visible = visible and image(season, 16, 16) is not None
+        return season if visible else None, a["artwork_intensity"]
+
+    def sync(self, viewed_month=None):
+        self.viewed_month = viewed_month
+        cfg = self.app.cfg
+        season, intensity = self.artwork_state()
         context = self.get_style_context()
-        context.add_class("scenic") if visible else context.remove_class("scenic")
+        context.add_class("scenic") if season else context.remove_class("scenic")
         self.scene.transition.cfg = cfg
-        self.scene.update(season if visible else None,
-                          a["artwork_intensity"])
+        self.scene.update(season, intensity)
 
 
 class DatePreview(ScenicSurface):

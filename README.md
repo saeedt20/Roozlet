@@ -25,6 +25,17 @@ it works offline and stays out of the way.
 The visible application name is **Roozlet / روزلت**. The established `rooz` command
 and Debian package identity remain unchanged so existing installations upgrade normally.
 
+## Fixed in 0.4.1
+
+Settings, Search and About now open **inside the existing calendar window**. Repeated clicks reuse the same page; search text and the selected settings section survive navigation. Escape returns to the calendar. Persian remains RTL and English LTR.
+
+The widget resolves its scene, accent and both seasonal marks from the same live Shamsi season. Scenic headers also reconcile cached artwork when drawn. Auto follows today's season; manual choices remain respected. The optional calendar “follow viewed month” setting affects the calendar, not the desktop widget.
+
+After upgrading, quit the running old process (`rooz --quit`) and start `rooz` again. Installing a package cannot replace code or decoded artwork already held by a running application. If you want the current season, enable **Settings → Appearance → Automatic season**.
+
+![Autumn widget](docs/screenshots/v0.4.1-card-autumn-fa.png)
+![Settings inside the calendar](docs/screenshots/v0.4.1-settings-fa.png)
+
 ## New in 0.4.0: search, notes and reminders
 
 - **Quick search:** press Ctrl+F/Ctrl+K or choose Search. Enter a Shamsi/Gregorian date, a Persian/English occasion, or words from your personal entries. Persian, Arabic and Latin digits are accepted. Enter or click a result to open its actual day and month.
@@ -41,7 +52,7 @@ These are real native GTK captures using **synthetic demo entries**, not actual 
 
 ![Persian notes and reminders](docs/screenshots/v0.4.0-personal-fa-dark.png)
 ![Persian editor](docs/screenshots/v0.4.0-editor-fa-dark.png)
-![English search](docs/screenshots/v0.4.0-search-en-light.png)
+![Search inside the calendar](docs/screenshots/v0.4.1-search-fa.png)
 
 See [personal-entry behavior and storage](docs/PERSONAL.md) for recurrence, missed alerts and backup details.
 
@@ -127,13 +138,13 @@ Full calendar at 200% scale on a constrained work area; scroll to reach the lowe
 
 ## Install
 
-Download `roozlet_0.4.0-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
+Download `roozlet_0.4.1-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
 From the folder containing the downloaded file:
 
 ```bash
-install -m 644 ./roozlet_0.4.0-1_all.deb /tmp/roozlet_0.4.0-1_all.deb
+install -m 644 ./roozlet_0.4.1-1_all.deb /tmp/roozlet_0.4.1-1_all.deb
 rooz --quit
-sudo apt install /tmp/roozlet_0.4.0-1_all.deb
+sudo apt install /tmp/roozlet_0.4.1-1_all.deb
 rooz
 ```
 
@@ -229,7 +240,7 @@ python3 scripts/validate-data.py
 GDK_SCALE=2 ./scripts/test-gui.sh
 ```
 
-Version 0.4.0 passes **83 tests**: 47 logic/data checks, 30 GTK checks and six native notification protocol checks. The complete suite also passed at 200% scaling. The GTK checks need an active display or Xvfb. They use temporary XDG directories
+Version 0.4.1 passes **86 tests**: 47 logic/data checks, 33 GTK checks and six native notification protocol checks. The complete suite also passed at 200% scaling. The GTK checks need an active display or Xvfb. They use temporary XDG directories
 and a private D-Bus session. The original 0.1.0 validation includes **20 core tests**, **seven
 GTK checks at each scale**, **21 native Xfce interaction checks**, installed-layout
 launches, Persian clipboard round trips and reproducible package builds.

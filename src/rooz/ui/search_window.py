@@ -9,21 +9,19 @@ from .common import button, clear, direction, label
 from .theme import style_window
 
 
-class SearchWindow(Gtk.Window):
-    def __init__(self, parent):
-        super().__init__(transient_for=parent, modal=True)
+class SearchContent:
+    def build(self, parent):
         self.parent, self.app, self.timeout = parent, parent.app, 0
-        self.set_destroy_with_parent(True)
-        self.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
-        area = parent.get_display().get_monitor_at_window(parent.get_window()).get_workarea()
-        self.set_default_size(min(620, area.width - 48), min(520, area.height - 120))
-        self.set_size_request(300, 220)
         self.get_style_context().add_class("rooz")
-        self.header = Gtk.HeaderBar(show_close_button=True)
-        self.set_titlebar(self.header)
+        self.header = Gtk.HeaderBar(show_close_button=not self.embedded)
+        if not self.embedded:
+            self.set_titlebar(self.header)
         self.root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.root.set_border_width(18)
-        self.add(self.root)
+        if self.embedded:
+            self.pack_start(self.root, True, True, 0)
+        else:
+            self.add(self.root)
         row = Gtk.Box(spacing=8)
         self.entry = Gtk.SearchEntry()
         self.entry.set_width_chars(12)
@@ -47,13 +45,15 @@ class SearchWindow(Gtk.Window):
         self.results = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         scroll.add(self.results)
         self.root.pack_start(scroll, True, True, 0)
-        self.close_button = button("", self.destroy)
+        self.close_button = button("", self.finish)
         self.close_button.set_halign(Gtk.Align.END)
         self.root.pack_start(self.close_button, False, False, 0)
         self.building = False
         self.result_values = []
         self.connect("destroy", self.cleanup)
-        self.connect("key-press-event", self.key)
+        self.connect("unmap", self.cleanup)
+        if not self.embedded:
+            self.connect("key-press-event", self.key)
         self.refresh_locale()
         self.show_all()
         self.entry.grab_focus()
@@ -61,7 +61,9 @@ class SearchWindow(Gtk.Window):
     def refresh_locale(self):
         self.building = True
         loc = self.app.loc
-        self.set_title(loc.t("search"))
+        self.set_direction(Gtk.TextDirection.RTL if loc.lang == "fa" else Gtk.TextDirection.LTR)
+        if not self.embedded:
+            self.set_title(loc.t("search"))
         self.header.set_title(loc.t("search"))
         self.entry.set_placeholder_text(loc.t("search_placeholder"))
         self.entry.get_accessible().set_name(loc.t("search"))
@@ -72,7 +74,7 @@ class SearchWindow(Gtk.Window):
         for key, title in (("auto", "detect_date"), ("shamsi", "shamsi"), ("gregorian", "gregorian")):
             self.mode.append(key, loc.t(title))
         self.mode.set_active_id(selected)
-        self.close_button.set_label(loc.t("close"))
+        self.close_button.set_label(loc.t("calendar") if self.embedded else loc.t("close"))
         direction(self.root, loc.lang == "fa")
         direction(self.header, loc.lang == "fa")
         style_window(self, self.app.cfg, self.app.today)
@@ -128,7 +130,8 @@ class SearchWindow(Gtk.Window):
         self.parent.view = "calendar"
         self.parent.select(value.day)
         self.parent.focus_selected()
-        self.destroy()
+        if not self.embedded:
+            self.destroy()
 
     def activate_first(self, *_):
         self.run_search()
@@ -142,6 +145,35 @@ class SearchWindow(Gtk.Window):
 
     def key(self, _, event):
         if event.keyval == Gdk.KEY_Escape:
-            self.destroy()
+            self.finish()
             return True
         return False
+
+
+    def finish(self):
+        self.cleanup()
+        if self.embedded:
+            self.parent.show_view("calendar")
+        else:
+            self.destroy()
+
+
+class SearchWindow(SearchContent, Gtk.Window):
+    embedded = False
+
+    def __init__(self, parent):
+        Gtk.Window.__init__(self, transient_for=parent, modal=True)
+        self.set_destroy_with_parent(True)
+        self.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+        area = parent.get_display().get_monitor_at_window(parent.get_window()).get_workarea()
+        self.set_default_size(min(620, area.width - 48), min(520, area.height - 120))
+        self.set_size_request(300, 220)
+        self.build(parent)
+
+
+class SearchPane(SearchContent, Gtk.Box):
+    embedded = True
+
+    def __init__(self, parent):
+        Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.build(parent)

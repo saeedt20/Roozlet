@@ -12,25 +12,30 @@ from .presentation import DatePreview
 from .theme import style_window
 
 
-class Settings(Gtk.ApplicationWindow):
+class SettingsContent:
     pages = ("appearance", "dates", "events", "desktop")
     icons = ("preferences-desktop-theme-symbolic", "preferences-desktop-locale-symbolic",
              "view-list-symbolic", "preferences-system-symbolic")
 
-    def __init__(self, app):
-        super().__init__(application=app, title="Roozlet")
+    def build(self, app):
         self.app, self.building, self.page = app, False, "appearance"
-        monitor = self.get_display().get_primary_monitor() or self.get_display().get_monitor(0)
-        area = monitor.get_workarea()
-        self.set_default_size(min(760, area.width - 48), min(680, area.height - 120))
-        self.set_size_request(360, 300)
         self.get_style_context().add_class("rooz")
-        self.header = Gtk.HeaderBar(show_close_button=True)
-        self.set_titlebar(self.header)
+        if self.embedded:
+            self.header = Gtk.Box(spacing=12)
+            self.header.set_border_width(12)
+            self.header_title = label(app.loc.t("settings"), "heading")
+            self.header.pack_start(self.header_title, True, True, 0)
+            self.pack_start(self.header, False, False, 0)
+        else:
+            self.header = Gtk.HeaderBar(show_close_button=True)
+            self.set_titlebar(self.header)
         self.page_picker = Gtk.ComboBoxText()
         self.page_picker.connect("changed", lambda b: self.show_page(b.get_active_id()) if not self.building else None)
         self.page_picker.set_no_show_all(True)
-        self.header.pack_end(self.page_picker)
+        if self.embedded:
+            self.header.pack_end(self.page_picker, False, False, 0)
+        else:
+            self.header.pack_end(self.page_picker)
         self.root = Gtk.Box()
         self.root.set_direction(Gtk.TextDirection.LTR)
         self.sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
@@ -43,16 +48,20 @@ class Settings(Gtk.ApplicationWindow):
         self.stack.set_interpolate_size(False)
         self.root.pack_start(self.sidebar, False, False, 0)
         self.root.pack_start(self.stack, True, True, 0)
-        self.add(self.root)
+        if self.embedded:
+            self.pack_start(self.root, True, True, 0)
+        else:
+            self.add(self.root)
         self.connect("size-allocate", self.responsive)
-        self.connect("delete-event", lambda *_: self.hide() or True)
-        self.connect("key-press-event", lambda _, e: (self.hide() or True) if e.keyval == Gdk.KEY_Escape else False)
+        if not self.embedded:
+            self.connect("delete-event", lambda *_: self.hide() or True)
+            self.connect("key-press-event", lambda _, e: (self.hide() or True) if e.keyval == Gdk.KEY_Escape else False)
         self.apply()
         self.show_all()
         self.responsive(self, self.get_allocation())
 
     def responsive(self, _, allocation):
-        wide = allocation.width >= 660
+        wide = not self.embedded and allocation.width >= 660
         self.sidebar.set_visible(wide)
         self.page_picker.set_visible(not wide)
 
@@ -82,13 +91,19 @@ class Settings(Gtk.ApplicationWindow):
         previous_scroll = {k: scroll.get_vadjustment().get_value() for k, scroll in getattr(self, "scrolls", {}).items()}
         advanced_open = getattr(self, "advanced", None)
         advanced_open = advanced_open.get_expanded() if advanced_open else False
-        focus = self.get_focus()
+        top = self.get_toplevel()
+        focus = top.get_focus() if isinstance(top, Gtk.Window) else None
         focused_key = next((k for k, control in getattr(self, "controls", {}).items() if control is focus), None)
         self.building = True
         style_window(self, cfg, self.app.today)
         title = ("روزلت" if loc.lang == "fa" else "Roozlet") + " · " + loc.t("settings")
-        self.set_title(title)
-        self.header.set_title(title)
+        if not self.embedded:
+            self.set_title(title)
+        if self.embedded:
+            self.header_title.set_text(loc.t("settings"))
+            direction(self.header, loc.lang == "fa")
+        else:
+            self.header.set_title(title)
         self.set_direction(Gtk.TextDirection.RTL if loc.lang == "fa" else Gtk.TextDirection.LTR)
         self.root.set_direction(Gtk.TextDirection.LTR)
         self.root.reorder_child(self.sidebar, 1 if loc.lang == "fa" else 0)
@@ -402,3 +417,25 @@ class Settings(Gtk.ApplicationWindow):
             b.set_active(autostart.enabled())
             self.building = False
             b.set_tooltip_text(self.app.loc.t("startup_help"))
+
+
+class Settings(SettingsContent, Gtk.ApplicationWindow):
+    """Standalone adapter retained for native component checks."""
+    embedded = False
+
+    def __init__(self, app):
+        Gtk.ApplicationWindow.__init__(self, application=app, title="Roozlet")
+        monitor = self.get_display().get_primary_monitor() or self.get_display().get_monitor(0)
+        area = monitor.get_workarea()
+        self.set_default_size(min(760, area.width - 48), min(680, area.height - 120))
+        self.set_size_request(360, 300)
+        self.build(app)
+
+
+class SettingsPane(SettingsContent, Gtk.Box):
+    """Preferences in the calendar shell: no separate native window."""
+    embedded = True
+
+    def __init__(self, app):
+        Gtk.Box.__init__(self, orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self.build(app)

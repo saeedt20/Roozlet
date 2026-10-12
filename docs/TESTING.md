@@ -4,6 +4,15 @@ The original 0.1.0 tests were performed on Linux Mint 22.3 Xfce/X11 with Python 
 PyGObject 3.48.2, Cairo 1.25.1, Xfwm4 4.18.0, Fontconfig 2.15.0 and Poppler 24.02.0.
 Only application window captures belong in docs/screenshots.
 
+## 0.4.1 seasonal visuals and embedded navigation — 12 October 2026
+
+- All **86 tests** passed: 47 logic/data checks, 33 native GTK checks and six notification protocol checks. The complete suite passed at normal and 200% scale in isolated virtual X11/private D-Bus.
+- New regressions cover repeated settings/search/About activation without new application windows, retained search/section state, Persian RTL/English LTR, Escape navigation, wrapped long Credits at narrow sizes, all four live season boundaries and stale stored artwork reconciled with both card marks. Manual season selection and viewed-month scope are preserved.
+- The real application coordinator was exercised under Xfwm4 on virtual X11: 12 repeated activations per route, actual language-setting callbacks, winter/manual → autumn/auto selection, search result activation, About/Credits, and English light mode. Only the desktop card and one calendar application window existed. The same application stages passed from the extracted Debian package. Window captures contain only Roozlet, with an isolated synthetic profile.
+- Annual data validation passed with no issues: unchanged 365-day 1405 mapping, 305 occasions and 26 holiday dates. No annual-data or personal-store migration.
+- The supplied winter-scene/autumn-accent screenshot did not reproduce with fresh 0.4.0 automatic-season defaults. Fresh 20 Mehr 1405 showed autumn artwork and a leaf. The original cause is unconfirmed; live reconciliation is hardened and upgrade instructions explicitly stop/restart the old process. Manual season choices remain intentional.
+- Native Mint apt installation, physical multi-monitor recovery, login/resume and actual notification presentation were not repeated. Virtual tests do not certify those environments.
+
 ## 0.4.0 search/personal reminders — 12 October 2026
 
 - All **83 tests** passed: 47 logic/data checks, 30 native GTK checks and six

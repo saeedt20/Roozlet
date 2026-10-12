@@ -53,6 +53,7 @@ class ScenicBand(Gtk.DrawingArea):
         super().__init__()
         self.season, self.intensity = season, intensity
         self.shade = shade
+        self.resolve = None
         self.transition = None
         if cfg:
             from .motion import ArtworkTransition
@@ -68,6 +69,10 @@ class ScenicBand(Gtk.DrawingArea):
         self.queue_draw()
 
     def draw(self, _, cr):
+        if self.resolve:
+            season, intensity = self.resolve()
+            if (season, intensity) != (self.season, self.intensity):
+                self.update(season, intensity)
         allocation = self.get_allocation()
         width, height = allocation.width, allocation.height
         cr.save()

@@ -86,6 +86,7 @@ class GuiTests(unittest.TestCase):
         cls.app = FakeApp()
 
     def setUp(self):
+        self.app.today = date(2026, 10, 10)
         self.app.cfg = copy.deepcopy(DEFAULTS)
         self.app.loc = Localizer(self.app.cfg)
         self.app.actions = []
@@ -108,6 +109,105 @@ class GuiTests(unittest.TestCase):
         self.windows.append(w)
         pump()
         return w
+
+    def about_dialog(self, parent):
+        from rooz.ui.about import AboutWindow
+        dialog = AboutWindow(parent)
+        self.windows.append(dialog)
+        return dialog
+
+    def test_embedded_navigation_reuses_content_and_native_window(self):
+        calendar = self.window(CalendarWindow)
+        original_windows = set(self.app.get_windows())
+        original_open = self.app.open_settings
+        self.app.open_settings = lambda: calendar.show_view("settings")
+        self.addCleanup(setattr, self.app, "open_settings", original_open)
+        for lang in ("fa", "en"):
+            self.app.cfg["language"] = lang
+            calendar.apply()
+            for key in ("settings", "search", "about"):
+                calendar.nav_items[key].clicked()
+                pump()
+                pane = calendar.panes[key]
+                for _ in range(5):
+                    calendar.nav_items[key].clicked()
+                pump()
+                self.assertIs(pane, calendar.panes[key])
+                self.assertIs(calendar, pane.get_toplevel())
+                self.assertEqual(original_windows, set(self.app.get_windows()))
+                expected = Gtk.TextDirection.RTL if lang == "fa" else Gtk.TextDirection.LTR
+                self.assertEqual(expected, pane.get_direction())
+            calendar.key(calendar, SimpleNamespace(keyval=Gdk.KEY_Escape))
+            self.assertEqual("calendar", calendar.view)
+        calendar.open_search().entry.set_text("حافظ")
+        search = calendar.search_window
+        calendar.show_view("settings")
+        calendar.panes["settings"].show_page("desktop")
+        calendar.show_about()
+        calendar.open_search()
+        self.assertIs(search, calendar.search_window)
+        self.assertEqual("حافظ", search.entry.get_text())
+        calendar.show_view("settings")
+        self.assertEqual("desktop", calendar.panes["settings"].page)
+        calendar.hide()
+        calendar.show()
+        self.assertEqual(original_windows, set(self.app.get_windows()))
+
+    def test_embedded_credits_and_settings_stay_within_shell(self):
+        calendar = self.window(CalendarWindow)
+        calendar.show_about()
+        pump()
+        calendar.resize(480, 440)
+        for _ in range(12):
+            pump(); time.sleep(.02)
+        about = calendar.panes["about"]
+        initial = tuple(calendar.get_size())
+        about.credit_labels[-1].set_text("Long notice " * 300 + "X" * 1200)
+        about.stack.set_visible_child_name("credits")
+        for _ in range(12):
+            pump(); time.sleep(.02)
+        self.assertEqual(initial, tuple(calendar.get_size()))
+        calendar.show_view("settings")
+        pane = calendar.panes["settings"]
+        pump()
+        self.assertFalse(pane.sidebar.get_visible())
+        self.assertTrue(pane.page_picker.get_visible())
+        for page in pane.pages:
+            pane.show_page(page)
+            pump()
+            self.assertEqual(page, pane.stack.get_visible_child_name())
+        self.assertIs(calendar, pane.get_toplevel())
+
+    def test_live_season_reconciles_artwork_and_both_widget_marks(self):
+        import cairo
+        from unittest.mock import patch
+        self.app.cfg["appearance"]["motion_effects"] = False
+        card = self.window(Card)
+        calendar = self.window(CalendarWindow)
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 1000, 1000)
+        for month, expected in ((1, "spring"), (4, "summer"), (7, "autumn"), (10, "winter")):
+            self.app.today = gregorian(1405, month, 1)
+            # Deliberately stale stored scene; drawing must reconcile it without
+            # depending on a previous preference/day-change refresh callback.
+            card.artwork_transition.current = "winter"
+            with patch("rooz.ui.widget.seasonal") as mark:
+                card.draw(card.canvas, cairo.Context(surface))
+                self.assertEqual([expected, expected], [call.args[1] for call in mark.call_args_list])
+            self.assertEqual(expected, card.artwork_transition.current)
+            calendar.hero.scene.update("winter", .65)
+            calendar.hero.scene.draw(calendar.hero.scene, cairo.Context(surface))
+            self.assertEqual(expected, calendar.hero.scene.transition.current)
+        self.app.today = date(2026, 10, 12)
+        calendar.hero.sync(1)
+        self.assertEqual("autumn", calendar.hero.scene.season)
+        self.app.cfg["appearance"]["calendar_follow_viewed_month"] = True
+        calendar.hero.sync(1)
+        self.assertEqual("spring", calendar.hero.scene.season)
+        self.app.cfg["appearance"]["season"] = "summer"
+        calendar.hero.sync(7)
+        self.assertEqual("summer", calendar.hero.scene.season)
+        card.apply()
+        self.assertEqual("summer", card.artwork_transition.current)
 
     def test_card_compact_font_and_gear(self):
         card = self.window(Card)
@@ -482,7 +582,7 @@ class GuiTests(unittest.TestCase):
         Gtk.StyleContext.add_provider_for_screen(screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
         self.addCleanup(Gtk.StyleContext.remove_provider_for_screen, screen, provider)
         calendar = self.window(CalendarWindow)
-        about = calendar.show_about()
+        about = self.about_dialog(calendar)
         pump()
         initial = tuple(about.get_size())
         about.credit_labels[-1].set_text("A very long attribution notice " * 300 + "X" * 1200)
@@ -510,32 +610,27 @@ class GuiTests(unittest.TestCase):
     def test_about_localization_github_and_lifecycle(self):
         from rooz.ui.about import PROJECT_URL
         calendar = self.window(CalendarWindow)
-        for lang in ("fa", "en"):
+        for lang in ("en", "fa"):
             self.app.cfg["language"] = lang
             about = calendar.show_about()
             pump()
             self.assertIs(about, calendar.show_about())
-            self.assertTrue(about.get_modal())
-            self.assertEqual(self.app.loc.t("about_title"), about.get_title())
-            self.assertEqual(Gtk.TextDirection.RTL if lang == "fa" else Gtk.TextDirection.LTR,
-                             about.switcher.get_direction())
+            self.assertIs(calendar, about.get_toplevel())
             self.assertEqual("GitHub", about.links["github"].get_label())
             self.assertEqual(PROJECT_URL, about.links["github"].get_uri())
             self.assertEqual(PROJECT_URL + "/issues", about.links["issues"].get_uri())
-            self.assertEqual(self.app.loc.t("close"), about.close_button.get_label())
+            self.assertEqual(self.app.loc.t("calendar"), about.close_button.get_label())
             for key in ("about", "credits", "licenses"):
                 self.assertEqual(self.app.loc.t(key), about.stack.child_get_property(about.pages[key], "title"))
             about.key(about, SimpleNamespace(keyval=Gdk.KEY_Escape))
-            self.assertIsNone(calendar.about_window)
-        about = calendar.show_about()
-        calendar.destroy()
-        pump()
-        self.assertIsNone(calendar.about_window)
+            self.assertEqual("calendar", calendar.view)
+        calendar.show_about().destroy()
+        self.assertNotIn("about", calendar.panes)
 
     def test_about_offline_licenses_are_wrapped_and_complete(self):
         self.app.cfg["appearance"].update(motion_effects=False, text_scale=1.4, theme="light")
         calendar = self.window(CalendarWindow)
-        about = calendar.show_about()
+        about = self.about_dialog(calendar)
         pump()
         self.assertEqual(0, about.stack.get_transition_duration())
         about.stack.set_visible_child_name("licenses")
@@ -561,7 +656,7 @@ class GuiTests(unittest.TestCase):
         window.activate_first()
         self.assertEqual(gregorian(1405, 1, 1), calendar.selected)
         self.assertEqual((1405, 1), (calendar.year, calendar.month))
-        self.assertIsNone(calendar.search_window)
+        self.assertEqual("calendar", calendar.view)
         window = calendar.open_search()
         window.entry.set_text("1405/13/4")
         window.activate_first()
@@ -573,7 +668,7 @@ class GuiTests(unittest.TestCase):
         expected = window.result_values[0].day
         window.results.get_children()[0].clicked()
         self.assertEqual(expected, calendar.selected)
-        self.assertIsNone(calendar.search_window)
+        self.assertEqual("calendar", calendar.view)
 
     def test_personal_editor_save_marker_search_and_edit(self):
         calendar = self.window(CalendarWindow)
@@ -685,7 +780,7 @@ class GuiTests(unittest.TestCase):
             self.assertEqual("Draft survives language changes", editor.title_entry.get_text())
             area = calendar.get_display().get_monitor_at_window(calendar.get_window()).get_workarea()
             pump()
-            for popup in (window, editor):
+            for popup in (calendar, editor):
                 self.assertLessEqual(popup.get_size().width, area.width)
                 self.assertLessEqual(popup.get_size().height, area.height)
             window.entry.set_text("test")
