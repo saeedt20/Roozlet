@@ -17,270 +17,90 @@
   <a href="https://github.com/saeedt20/Roozlet/issues">Report an issue</a>
 </p>
 
-Roozlet keeps today's Persian, Gregorian and official Iranian Hijri dates on a
-compact desktop card. Double-click it to open a full month calendar with Iranian
-occasions and public holidays. Built with native GTK3 for **Linux Mint 22.3 Xfce**,
-it works offline and stays out of the way.
+Roozlet keeps Persian, Gregorian and official Iranian Hijri dates on a compact desktop card. Double-click for the month calendar, occasions, notes and reminders. Built with native GTK 3 for **Linux Mint 22.3 Xfce/X11**, it works offline.
 
-The visible application name is **Roozlet / روزلت**. The established `rooz` command
-and Debian package identity remain unchanged so existing installations upgrade normally.
-
-## Fixed in 0.4.1
-
-Settings, Search and About now open **inside the existing calendar window**. Repeated clicks reuse the same page; search text and the selected settings section survive navigation. Escape returns to the calendar. Persian remains RTL and English LTR.
-
-The widget resolves its scene, accent and both seasonal marks from the same live Shamsi season. Scenic headers also reconcile cached artwork when drawn. Auto follows today's season; manual choices remain respected. The optional calendar “follow viewed month” setting affects the calendar, not the desktop widget.
-
-After upgrading, quit the running old process (`rooz --quit`) and start `rooz` again. Installing a package cannot replace code or decoded artwork already held by a running application. If you want the current season, enable **Settings → Appearance → Automatic season**.
-
-![Autumn widget](docs/screenshots/v0.4.1-card-autumn-fa.png)
-![Settings inside the calendar](docs/screenshots/v0.4.1-settings-fa.png)
-
-## New in 0.4.0: search, notes and reminders
-
-- **Quick search:** press Ctrl+F/Ctrl+K or choose Search. Enter a Shamsi/Gregorian date, a Persian/English occasion, or words from your personal entries. Persian, Arabic and Latin digits are accepted. Enter or click a result to open its actual day and month.
-- **Personal entries:** add notes, birthdays, appointments and tasks with Ctrl+N or Add entry. Edit saved entries, mark one occurrence done, and undo deletion. Personal days have a separate ◇ marker; they never become official public holidays.
-- **Repeat:** one-time, daily, weekly or yearly in the Shamsi calendar. Esfand 30 anniversaries use Esfand's last day in non-leap years.
-- **Optional notifications:** off by default. Enable Desktop notifications in Notes & reminders or Settings → Desktop & startup, and opt in on each entry. A Test notification button checks the desktop service.
-- **Local storage:** an owner-only SQLite database stores personal entries and delivery state. Upgrades preserve it; there are no cloud accounts or runtime Internet requests.
-
-Reminders are checked every 30 seconds **while Roozlet runs**. Start at login remains optional. Startup/resume checks missed reminders from the previous 24 hours, with at most five sends per poll. Service failures are retried after two minutes. Accepted deliveries are recorded so reopening Roozlet does not resend the same occurrence. Display and click actions depend on your desktop notification service; actions work while Roozlet is running.
-
-Search covers all loaded occasions independently of the visible-category filter. Official annual/Hijri coverage is still **1405 only**; personal entries and date jumps work across the supported 1350–1450 Shamsi range.
-
-These are real native GTK captures using **synthetic demo entries**, not actual user notes:
-
-![Persian notes and reminders](docs/screenshots/v0.4.0-personal-fa-dark.png)
-![Persian editor](docs/screenshots/v0.4.0-editor-fa-dark.png)
-![Search inside the calendar](docs/screenshots/v0.4.1-search-fa.png)
-
-See [personal-entry behavior and storage](docs/PERSONAL.md) for recurrence, missed alerts and backup details.
-
-## Four seasons, one compact calendar
-
-Roozlet includes **Spring, Summer, Autumn and Winter** appearances with bundled
-scenery and scalable seasonal icons. The **Shamsi date is always in the middle**
-of the 320 × 236 logical-pixel widget, with Gregorian on the left and Iranian
-Hijri on the right. Hiding either auxiliary calendar keeps Shamsi centered.
-
-These are actual GTK window captures from an isolated virtual X11 display, not
-design mockups or a claim of a native Mint installation test.
-
-<table>
-<tr><th>Spring</th><th>Summer</th></tr>
-<tr><td><img src="docs/screenshots/v0.3.0-card-spring-fa-dark.png" width="320" alt="Spring centered Shamsi widget"></td><td><img src="docs/screenshots/v0.3.0-card-summer-fa-dark.png" width="320" alt="Summer centered Shamsi widget"></td></tr>
-<tr><th>Autumn</th><th>Winter</th></tr>
-<tr><td><img src="docs/screenshots/v0.3.0-card-autumn-fa-dark.png" width="320" alt="Autumn centered Shamsi widget"></td><td><img src="docs/screenshots/v0.3.0-card-winter-fa-dark.png" width="320" alt="Winter widget with snowflake"></td></tr>
-</table>
-
-![Persian calendar with right sidebar](docs/screenshots/v0.3.0-calendar-fa-dark.png)
-![English light calendar with left sidebar](docs/screenshots/v0.3.0-calendar-en-light.png)
-![Persian preferences with right-aligned sidebar](docs/screenshots/v0.3.0-settings-fa-dark.png)
-![English preferences with left-aligned sidebar](docs/screenshots/v0.3.0-settings-en-dark.png)
-
-### Fixed in 0.3.1
-
-- About, Credits and Licenses now use localized, work-area-sized scrolling pages.
-- Long artwork notices and unbroken text wrap without enlarging the window.
-- Explicit **GitHub** and **Report an issue** links, an actual native app mark and offline original license texts.
-- Persian RTL and English LTR follow the app language independently of system translations.
-
-![Persian About and credits](docs/screenshots/v0.3.1-credits-fa-dark.png)
-![English About](docs/screenshots/v0.3.1-about-en-light.png)
-
-### New in 0.3.0
-
-- Scenic calendar header, quiet date grid and a selected-day card with one **Copy date** dropdown, including numerical variants.
-- **Persian RTL / English LTR** navigation and weekday columns. Saturday starts the week in both; keyboard arrows follow the visible direction.
-- Grouped preferences, a live current-date widget preview, four season tiles, light/dark controls and an advanced section for fonts, scales and Classic mode.
-- **Subtle transitions:** 160–180 ms content fades, 260 ms artwork crossfades and gentle button feedback. Disable them in Appearance; system GTK animation preferences are respected. There is no looping or idle animation.
-- Automatic/manual seasons and calendar-only **Follow displayed month** remain available. The widget's Shamsi date stays centered.
-- Click the month title or right-click **Today** (Shift+F10 when focused) to choose a month and year.
-- Independent digits, numerical copies, verified data, font/position settings and opt-in startup are preserved.
-
-**Upgrading:** old settings keep their Classic appearance and custom accent. To
-turn on scenery, open **Settings → Appearance → Advanced settings → Appearance style → Seasonal**.
-Fresh installations use automatic seasonal appearance. No wallpaper or system
-theme is changed and no artwork is downloaded at runtime.
-
-<details>
-<summary>Earlier 0.1.0 Mint Xfce examples: English calendar, independent digits, holidays and 200% scaling</summary>
-
-![English month calendar](docs/screenshots/calendar-en-light.png)
-
-Persian interface with independently selected Latin digits:
-
-![Persian interface with Latin digits](docs/screenshots/card-fa-latin-light.png)
-
-Selected official holiday and its details:
-
-![Official holiday details](docs/screenshots/calendar-fa-holiday.png)
-
-Full calendar at 200% scale on a constrained work area; scroll to reach the lower controls:
-
-![Calendar at 200% scale](docs/screenshots/calendar-fa-dark-2x.png)
-
-![Reachable calendar controls at 200% scale](docs/screenshots/calendar-fa-dark-2x-scrolled.png)
-
-</details>
-
-## Features
-
-- **Compact desktop widget:** three dates, an occasion summary and the next public-holiday countdown.
-- **Full calendar:** computed Persian month grids, Gregorian secondary dates, distinct holiday/event markers, selected-day details and copy actions.
-- **Quick month selection:** right-click **Today** (or focus it and press Shift+F10) to choose from all 12 Persian months, with year navigation. Left-click returns to today.
-- **Numerical dates:** enable **Settings → Dates → Prefer numerical form of dates** for `year/month/day` hover text, date details and clipboard copies. The widget's **Copy numerical date** menu also works without enabling the preference.
-- **Bilingual controls:** complete Persian and English interfaces, independent Persian/Latin digits and bundled Vazirmatn fonts.
-- **Personal appearance:** dark/light themes, accent color, background opacity, font choice, card size and text scale.
-- **Desktop behavior:** header dragging, position lock/reset, optional always-on-top and all-workspaces placement, and single-instance operation.
-- **Your startup choice:** start at login is off by default and controlled in Settings.
-- **Offline operation:** no account, telemetry, runtime downloads or calendar API dependency.
+The visible name is **Roozlet / روزلت**; the command and Debian package remain **`rooz`** so existing installations upgrade normally. Wayland has not been validated.
 
 ## Install
 
-Download `roozlet_0.4.1-1_all.deb` from the [latest release](https://github.com/saeedt20/Roozlet/releases/latest).
-From the folder containing the downloaded file:
+Download **[roozlet_0.4.1-1_all.deb](https://github.com/saeedt20/Roozlet/releases/download/v0.4.1/roozlet_0.4.1-1_all.deb)**. In the download folder:
 
-```bash
+```sh
 install -m 644 ./roozlet_0.4.1-1_all.deb /tmp/roozlet_0.4.1-1_all.deb
-rooz --quit
 sudo apt install /tmp/roozlet_0.4.1-1_all.deb
 rooz
 ```
 
-The readable /tmp copy avoids the `_apt` permission notice caused by private home folders. APT resolves the native GTK, Cairo, Fontconfig and timezone dependencies.
-Installation adds a desktop launcher; it does not start the app or enable login startup.
-Run the app as your ordinary user.
+**Upgrading:** run `rooz --quit` before installation and restart afterward; installing a package does not reload an existing process. Settings and personal entries are preserved. APT resolves native dependencies; the readable `/tmp` copy avoids `_apt` access notices. Installation does not launch the app or enable startup.
 
-Optional: download all three release assets into the same folder and verify them:
+To verify checksums, download all three [release assets](https://github.com/saeedt20/Roozlet/releases/tag/v0.4.1) into one folder and run `sha256sum -c SHA256SUMS`.
 
-```bash
-sha256sum -c SHA256SUMS
-```
+## Preview
 
-### Everyday use
+<table>
+<tr><th>Seasonal card</th><th>Settings in the calendar</th></tr>
+<tr><td><img src="docs/screenshots/v0.4.1-card-autumn-fa.png" alt="Persian autumn calendar card" width="320"></td><td><img src="docs/screenshots/v0.4.1-settings-fa.png" alt="Persian settings inside the native calendar" width="540"></td></tr>
+</table>
 
-Double-click the card to open the month view. Use the gear for Settings, right-click
-for calendar/copy/position actions, and drag the header to move the unlocked card.
-Closing the calendar or Settings leaves the card running. The **Copy date** menu includes textual/numerical formats and all-date copies.
+*Native GTK captures from an isolated virtual X11 display. Personal-entry examples in the documentation are synthetic.*
+
+## Features
+
+- **Three calendars:** a centered Shamsi date with optional Gregorian and Iranian Hijri dates, plus a full month view and copy actions.
+- **Search and personal entries:** date jumps, occasions, notes, birthdays, appointments and tasks, with Shamsi recurrence and undo deletion.
+- **Optional reminders:** desktop notifications are off by default; enable them globally and for each entry. Reminders run **only while Roozlet is running**.
+- **Four seasons:** bundled Spring/Summer/Autumn/Winter artwork, automatic/manual selection, Classic mode and light/dark themes.
+- **Persian and English:** RTL/LTR layouts, independent numeral choices and bundled Vazirmatn fonts.
+- **Desktop controls:** dragging, position lock/reset, optional top/all-workspaces placement and opt-in login startup.
+- **Local operation:** personal entries use a private SQLite database; no account, telemetry or runtime downloads are required.
+
+In 0.4.1, Settings, Search and About share the existing calendar window. Automatic season follows today's Shamsi date; “follow displayed month” affects calendar scenery, not the desktop card. Older Classic profiles retain their appearance. [Current changes](docs/releases/v0.4.1.md) · [Personal-entry and reminder guide](docs/PERSONAL.md).
+
+## Calendar coverage
+
+| Data | Verified range |
+|---|---|
+| Persian/Gregorian browsing and conversion | Shamsi **1350–1450** |
+| Official Iranian Hijri dates | **1405 only** |
+| Official occasions and holidays | **1405 only**: 305 records, 26 distinct statutory holiday dates |
+
+The bundled **1405.1** dataset comes from the final University of Tehran Calendar Center calendar. Outside that year, annual coverage is marked incomplete and Iranian Hijri dates unavailable; future lunar holidays are not guessed. Some English occasion titles retain an explicit Persian fallback. [Sources and validation](docs/DATA_SOURCES.md).
+
+The default civil timezone is **Asia/Tehran**, with a system-timezone option. Personal entries remain separate from official public holidays.
+
+## Everyday commands
 
 | Command | Action |
-| --- | --- |
-| `rooz` | Start the card; a repeat invocation raises the calendar |
-| `rooz --widget` | Start or retain card mode, without opening the month view |
-| `rooz --calendar` | Open or raise the month view |
-| `rooz --search` | Open date, occasion and personal-entry search |
+|---|---|
+| `rooz` | Start the card; a repeat launch raises the calendar |
+| `rooz --calendar` | Open the month view |
+| `rooz --search` | Search dates, occasions and entries |
 | `rooz --personal` | Open notes and reminders |
-| `rooz --settings` | Open or raise Settings |
-| `rooz --reset-position` | Restore a safe default card position |
-| `rooz --check-data` | Report installed calendar coverage and validation |
-| `rooz --version` | Print the version |
-| `rooz --quit` | Close the running application |
+| `rooz --settings` | Open Settings |
+| `rooz --reset-position` | Recover the card's position |
+| `rooz --quit` | Close the app |
 
-In Persian, **Saturday is on the right** and **Friday is on the left**; Left moves one day forward. In English, **Saturday is on the left** and **Friday is on the right**; Right moves one day forward.
-Up/Down move one week, Page Up/Down move one month, and Home/End select the first/last
-day of the month. The Today button returns to the current civil day.
+Double-click the card for the calendar; use the gear or right-click for controls. Escape returns to the calendar, and closing it leaves the card running. Enable login startup in **Desktop & startup** if wanted; a source checkout cannot enable it before the installed launcher exists.
 
-Start at login uses your XDG autostart entry. Enable or disable it in Settings
-under Desktop & startup. The development checkout cannot enable it until
-`/usr/bin/rooz` is installed.
+## Build and test
 
-## Calendar accuracy and coverage
-
-Dates come from tested conversion logic, not from screenshot layouts.
-The default civil timezone is **Asia/Tehran**; the system timezone is also selectable.
-
-| Data | Verified coverage |
-| --- | --- |
-| Persian/Gregorian browsing and conversion | 1350–1450; all 36,890 days round-trip tested |
-| Independent official annual date mappings | Every day of 1405: 2026-03-21 through 2027-03-20 |
-| Official Iranian Hijri dates | 1405 only; derived from the final Iranian annual calendar |
-| Iranian occasions | 305 records from all 189 main and 93 appendix occasion cells for 1405 |
-| Statutory public holidays | 26 distinct dates in 1405; ordinary Fridays are separate |
-
-The bundled dataset is **1405.1**, sourced from the final University of Tehran
-Calendar Center calendar. Leap flags across the conversion range are checked
-against the Center's independent leap-year reference.
-
-Outside 1405, the app states that annual occasion coverage is incomplete and
-Hijri dates are unavailable. Future lunar holidays are not guessed. Of the occasion
-records, 190 have reviewed English translations; 115 display their Persian title
-with an explicit translation-fallback notice.
-
-See [data provenance, checksums and update procedure](docs/DATA_SOURCES.md).
-
-## Build from source
-
-```bash
+```sh
 git clone https://github.com/saeedt20/Roozlet.git
 cd Roozlet
 sudo apt install python3 python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 tzdata libfontconfig1
 ./scripts/dev-run.sh --calendar
-```
-
-Build the Debian package and publication source archive:
-
-```bash
-./scripts/build-deb.sh
-python3 scripts/source-archive.py
-(cd dist && sha256sum -c SHA256SUMS)
-```
-
-Output is in `dist/`. The rootless build uses `dpkg-deb`, needs no pip or runtime
-network downloads, and bundles pinned conversion-library source and static fonts
-with their licenses. Native libraries remain declared system dependencies.
-Standard debhelper packaging is also available; see [release instructions](docs/RELEASING.md).
-
-### Tests
-
-```bash
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 python3 scripts/validate-data.py
-./scripts/test-gui.sh
-GDK_SCALE=2 ./scripts/test-gui.sh
+./scripts/build-deb.sh
 ```
 
-Version 0.4.1 passes **86 tests**: 47 logic/data checks, 33 GTK checks and six native notification protocol checks. The complete suite also passed at 200% scaling. The GTK checks need an active display or Xvfb. They use temporary XDG directories
-and a private D-Bus session. The original 0.1.0 validation includes **20 core tests**, **seven
-GTK checks at each scale**, **21 native Xfce interaction checks**, installed-layout
-launches, Persian clipboard round trips and reproducible package builds.
-Version 0.1.1 passes **24 logic tests and 11 GTK checks**, with all 11 GTK checks
-also passing at 200% scale; its extracted-package GUI and numerical clipboard
-callbacks were checked separately.
+The rootless package build writes `dist/`. [Release instructions](docs/RELEASING.md) cover the source archive and checksums. [Testing](docs/TESTING.md) covers isolated GTK/notification and 200% scale checks, plus remaining real-session, suspend and monitor tests.
 
-See the [full validation record](docs/TESTING.md), including checks still requiring
-real login, suspend, physical monitor changes and package-manager lifecycle testing.
-X11 is the release target; Wayland has not been validated.
+## Help and license
 
-## Remove
+- [Personal entries](docs/PERSONAL.md) · [Data provenance](docs/DATA_SOURCES.md) · [0.4.1 interface](docs/UI_0.4.1.md)
+- [Contributing](AGENTS.md) · [Third-party notices](THIRD_PARTY_NOTICES.md)
 
-```bash
-rooz --quit
-sudo apt remove rooz
-```
+To remove: `rooz --quit`, then `sudo apt remove rooz`. Preferences remain; disable login startup first if enabled.
 
-User preferences are preserved. If you enabled login startup, disable it before
-removal or remove only its entry afterwards:
-
-```bash
-rm -f "${XDG_CONFIG_HOME:-$HOME/.config}/autostart/rooz.desktop"
-```
-
-## Contributing
-
-Bug reports and focused pull requests are welcome. Include your desktop session,
-app version, relevant settings and steps to reproduce. Calendar-data corrections
-must cite an authoritative source and include a regression check. Keep the default
-card compact, preserve independent language/digit settings, and avoid runtime
-network dependencies. See [design notes](docs/DESIGN.md) and [development instructions](AGENTS.md).
-
-## License and acknowledgments
-
-Original application code and documentation are licensed under the **[MIT license](LICENSE)**,
-copyright © 2026 Saeed Taheri.
-
-Bundled jdatetime, jalali-core and Vazirmatn retain their own licenses. Calendar
-facts are attributed to the University of Tehran Calendar Center; the original
-annual PDF is not redistributed. See [third-party notices](THIRD_PARTY_NOTICES.md).
-
-Roozlet is an independent project, not an official Linux Mint product.
+Original code and documentation are **[MIT-licensed](LICENSE)**, copyright © 2026 Saeed Taheri. Bundled libraries/fonts retain their licenses; calendar data credits the University of Tehran Calendar Center. Roozlet is independent of Linux Mint.
