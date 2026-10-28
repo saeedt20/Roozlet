@@ -61,7 +61,7 @@ class SettingsContent:
         self.responsive(self, self.get_allocation())
 
     def responsive(self, _, allocation):
-        wide = not self.embedded and allocation.width >= 660
+        wide = not self.embedded and self.root.get_allocated_width() >= 660
         self.sidebar.set_visible(wide)
         self.page_picker.set_visible(not wide)
 
@@ -356,7 +356,16 @@ class SettingsContent:
             return
         cfg = self.app.cfg
         self.building = True
-        self.notification_switch.set_active(cfg["personal"]["notifications_enabled"])
+        for (section, key), control in self.controls.items():
+            value = cfg[section][key] if section else cfg[key]
+            if isinstance(control, Gtk.Switch):
+                control.set_active(value)
+            elif isinstance(control, Gtk.ComboBoxText):
+                control.set_active_id(value)
+            elif isinstance(control, (Gtk.SpinButton, Gtk.Range)):
+                control.set_value(value)
+        for category, control in self.category_switches.items():
+            control.set_active(category in cfg["events"]["visible_categories"])
         self.notification_test.set_sensitive(cfg["personal"]["notifications_enabled"])
         style_window(self, cfg, self.app.today)
         self.auto_switch.set_active(cfg["appearance"]["season"] == "auto")
@@ -370,8 +379,6 @@ class SettingsContent:
             context.add_class("selected") if key == cfg["appearance"]["theme"] else context.remove_class("selected")
         follow = self.controls["appearance", "calendar_follow_viewed_month"]
         follow.set_sensitive(cfg["appearance"]["style"] == "seasonal" and cfg["appearance"]["season"] == "auto")
-        for key in ("style", "accent_source"):
-            self.controls["appearance", key].set_active_id(cfg["appearance"][key])
         from .theme import tokens
         color = Gdk.RGBA()
         color.parse(tokens(cfg, self.app.today)["accent"])

@@ -23,17 +23,17 @@ The visible name is **Roozlet / روزلت**; the command and Debian package rem
 
 ## Install
 
-Download **[roozlet_0.4.1-1_all.deb](https://github.com/saeedt20/Roozlet/releases/download/v0.4.1/roozlet_0.4.1-1_all.deb)**. In the download folder:
+Download **[roozlet_0.4.2-1_all.deb](https://github.com/saeedt20/Roozlet/releases/download/v0.4.2/roozlet_0.4.2-1_all.deb)**. In the download folder:
 
 ```sh
-install -m 644 ./roozlet_0.4.1-1_all.deb /tmp/roozlet_0.4.1-1_all.deb
-sudo apt install /tmp/roozlet_0.4.1-1_all.deb
+install -m 644 ./roozlet_0.4.2-1_all.deb /tmp/roozlet_0.4.2-1_all.deb
+sudo apt install /tmp/roozlet_0.4.2-1_all.deb
 rooz
 ```
 
 **Upgrading:** run `rooz --quit` before installation and restart afterward; installing a package does not reload an existing process. Settings and personal entries are preserved. APT resolves native dependencies; the readable `/tmp` copy avoids `_apt` access notices. Installation does not launch the app or enable startup.
 
-To verify checksums, download all three [release assets](https://github.com/saeedt20/Roozlet/releases/tag/v0.4.1) into one folder and run `sha256sum -c SHA256SUMS`.
+To verify checksums, download all three [release assets](https://github.com/saeedt20/Roozlet/releases/tag/v0.4.2) into one folder and run `sha256sum -c SHA256SUMS`.
 
 ## Preview
 
@@ -54,7 +54,7 @@ To verify checksums, download all three [release assets](https://github.com/saee
 - **Desktop controls:** dragging, position lock/reset, optional top/all-workspaces placement and opt-in login startup.
 - **Local operation:** personal entries use a private SQLite database; no account, telemetry or runtime downloads are required.
 
-In 0.4.1, Settings, Search and About share the existing calendar window. Automatic season follows today's Shamsi date; “follow displayed month” affects calendar scenery, not the desktop card. Older Classic profiles retain their appearance. [Current changes](docs/releases/v0.4.1.md) · [Personal-entry and reminder guide](docs/PERSONAL.md).
+Settings, Search and About share the existing calendar window. Automatic season follows today's Shamsi date; “follow displayed month” affects calendar scenery, not the desktop card. Older Classic profiles retain their appearance. [Current changes](docs/releases/v0.4.2.md) · [Personal-entry and reminder guide](docs/PERSONAL.md).
 
 ## Calendar coverage
 
@@ -87,7 +87,7 @@ Double-click the card for the calendar; use the gear or right-click for controls
 ```sh
 git clone https://github.com/saeedt20/Roozlet.git
 cd Roozlet
-sudo apt install python3 python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 tzdata libfontconfig1
+sudo apt install git python3 python3-gi python3-cairo python3-gi-cairo gir1.2-gtk-3.0 tzdata libfontconfig1
 ./scripts/dev-run.sh --calendar
 PYTHONPATH=src python3 -m unittest discover -s tests -v
 python3 scripts/validate-data.py

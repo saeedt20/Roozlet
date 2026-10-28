@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """Create a deterministic publication-review source bundle, without private files."""
 
-import gzip, hashlib, io, os, sys, tarfile
+import gzip, hashlib, io, os, subprocess, sys, tarfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,15 +13,18 @@ DIST.mkdir(exist_ok=True)
 target = DIST / f"roozlet-{__version__}-source.tar.gz"
 epoch = int(os.environ.get("SOURCE_DATE_EPOCH", "1791633600"))
 EXCLUDED = {".git", "dist", "build", "__pycache__", ".ruff_cache", ".pytest_cache"}
+tracked = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT).decode().split("\0")
 with (
     target.open("wb") as out,
     gzip.GzipFile(filename="", mode="wb", fileobj=out, mtime=epoch) as compressed,
     tarfile.open(fileobj=compressed, mode="w") as archive,
 ):
-    for p in sorted(ROOT.rglob("*")):
-        rel = p.relative_to(ROOT)
+    for name in sorted(filter(None, tracked)):
+        rel = Path(name)
+        p = ROOT / rel
         if (
             not p.is_file()
+            or p.is_symlink()
             or any(part in EXCLUDED or part.startswith(".venv") for part in rel.parts)
             or p.suffix.lower() in (".pdf", ".pyc", ".deb", ".db", ".sqlite", ".sqlite3")
             or any(p.name.endswith(ext + tail) for ext in (".db", ".sqlite", ".sqlite3")

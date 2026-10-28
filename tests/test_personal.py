@@ -2,9 +2,11 @@ import copy
 import os
 import sqlite3
 import tempfile
+import time
 import unittest
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 from rooz.calendar_service import gregorian, month_length
 from rooz.config import DEFAULTS, validate
@@ -162,6 +164,58 @@ class PersonalTests(unittest.TestCase):
         self.assertFalse(validate({})["personal"]["notifications_enabled"])
         self.assertTrue(validate({"personal": {"notifications_enabled": True}})["personal"]["notifications_enabled"])
         self.assertFalse(validate({"personal": {"notifications_enabled": "true"}})["personal"]["notifications_enabled"])
+
+    def test_future_annual_and_completed_years_keep_the_next_occurrence(self):
+        anchor = gregorian(1408, 1, 1)
+        key = self.store.save("Future birthday", "", anchor, "birthday", "annual")
+        self.assertEqual(anchor, self.store.entries(self.day)[0].day)
+        for year in (1408, 1409):
+            self.store.set_state(key, gregorian(year, 1, 1), "done")
+        self.assertEqual(gregorian(1410, 1, 1), self.store.entries(anchor)[0].day)
+
+    def test_reminder_read_failure_reaches_the_error_handler(self):
+        errors, sends = [], []
+        engine = ReminderEngine(self.store, lambda *args: sends.append(args), lambda: errors.append(True))
+        with patch.object(self.store, "on", side_effect=PersonalError("Synthetic read failure")):
+            engine.tick(datetime(2026, 10, 12, 12, tzinfo=timezone.utc), "Asia/Tehran", True)
+        self.assertEqual([True], errors)
+        self.assertEqual([], sends)
+
+    def test_system_dst_catchup_includes_two_local_dates_ago(self):
+        key = self.store.save("Before spring gap", "", date(2026, 3, 28), notify=True, reminder_time="23:30")
+        now = datetime(2026, 3, 29, 22, 15, tzinfo=timezone.utc)
+        try:
+            with patch.dict(os.environ, {"TZ": "Europe/Berlin"}):
+                time.tzset()
+                self.assertEqual([key], [o.item["id"] for o in self.store.due(now, "system")])
+                self.assertEqual([], self.store.due(now + timedelta(minutes=16), "system"))
+        finally:
+            time.tzset()
+
+    def test_day_lookup_batches_states_and_keeps_changes_and_deletions(self):
+        with self.store.connection:
+            self.store.connection.executemany("INSERT INTO items VALUES(?,?,?,?,?,?,?,?,0)",
+                [(str(i), "Synthetic daily task", "", self.day.isoformat(), "task", "daily", 0, "09:00")
+                 for i in range(10000)])
+        self.store._cache = None
+        self.store.items()
+        self.store.set_state("0", self.day, "done")
+        self.store.set_state("1", self.day, "delivered")
+        self.store.set_deleted("2")
+        self.store.items()
+        queries = []
+        self.store.connection.set_trace_callback(queries.append)
+        try:
+            occurrences = self.store.on(self.day)
+        finally:
+            self.store.connection.set_trace_callback(None)
+        self.assertEqual(1, len(queries))
+        self.assertEqual(9999, len(occurrences))
+        values = {o.item["id"]: o for o in occurrences}
+        self.assertTrue(values["0"].done)
+        self.assertTrue(values["1"].delivered)
+        self.store.set_state("0", self.day, "done", False)
+        self.assertFalse(next(o for o in self.store.on(self.day) if o.item["id"] == "0").done)
 
 
 class SearchTests(unittest.TestCase):

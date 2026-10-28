@@ -1,3 +1,15 @@
+rooz (0.4.2-1) unstable; urgency=medium
+
+  * Exclude untracked private files and symlinks from release source archives.
+  * Reject malformed annual imports without preventing startup.
+  * Fix reminder error reporting, DST catch-up and future annual entries.
+  * Batch personal occurrence reads and index daily state lookups.
+  * Fix compact navigation sizing and synchronize retained settings controls.
+  * Keep large-text search and navigation usable on short screens.
+  * Refresh desktop and extracted-package verification for the current UI.
+
+ -- Saeed Taheri <132300919+saeedt20@users.noreply.github.com>  Wed, 28 Oct 2026 12:00:00 +0330
+
 rooz (0.4.1-1) unstable; urgency=medium
 
   * Embed settings, search and About in the existing calendar window.

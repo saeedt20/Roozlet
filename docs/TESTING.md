@@ -4,6 +4,19 @@ The original 0.1.0 tests were performed on Linux Mint 22.3 Xfce/X11 with Python 
 PyGObject 3.48.2, Cairo 1.25.1, Xfwm4 4.18.0, Fontconfig 2.15.0 and Poppler 24.02.0.
 Only application window captures belong in docs/screenshots.
 
+## 0.4.2 audit fixes — 28 October 2026
+
+- All **93 tests** passed at normal and 200% scale: 53 logic/data checks, 34 GTK checks and six notification protocol checks, using temporary personal data and private D-Bus sessions.
+- New regressions cover malformed nested annual records, archive exclusion of untracked files/symlinks/databases, reminder read failures, System-timezone spring DST catch-up, future annual entries and retained Settings state. The previously failing narrow-window check now passes by measuring content width without window decorations. Navigation and search help scroll instead of forcing large-text windows taller than short screens.
+- A warm lookup of a 30-day month with 10,000 synthetic daily entries made **30 SQL queries in 0.864 seconds**, down from 300,000 queries and 6.484 seconds in the audit. This measures the data lookup, not complete rendering.
+- The extracted 0.4.2 package passed headless version/data commands from `/tmp` and real window checks at normal and 200% scale. Settings, Search and personal-entry routes reused one calendar window; raising it preserved the current page. Mapped card geometry measured 320 × 236 and 640 × 472 physical pixels.
+- Annual data remains unchanged: 365 mappings, 305 occasions and 26 holiday dates, with no validation issues. Personal tables remain schema 1; an index speeds up occurrence lookups by day.
+- No system installation, physical monitor changes, login/suspend cycle or native pointer/Show Desktop check was performed. The desktop-input helper was updated for the current titles, geometry and embedded Settings; those gestures still require a manual run.
+
+The installed-layout helper accepts an explicit extracted launcher:
+`dbus-run-session -- python3 scripts/installed-gui-check.py /path/to/extracted/usr/bin/rooz`.
+Its report is written to `dist/installed-gui-check-0.4.2.json`.
+
 ## 0.4.1 seasonal visuals and embedded navigation — 12 October 2026
 
 - All **86 tests** passed: 47 logic/data checks, 33 native GTK checks and six notification protocol checks. The complete suite passed at normal and 200% scale in isolated virtual X11/private D-Bus.

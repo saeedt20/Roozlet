@@ -3,7 +3,7 @@ Section: utils
 Priority: optional
 Maintainer: Saeed Taheri <132300919+saeedt20@users.noreply.github.com>
 Homepage: https://github.com/saeedt20/Roozlet
-Build-Depends: debhelper-compat (= 13), dh-python, python3, python3-gi, gir1.2-gtk-3.0, python3-cairo, python3-gi-cairo, tzdata
+Build-Depends: debhelper-compat (= 13), dh-python, git, python3, python3-gi, gir1.2-gtk-3.0, python3-cairo, python3-gi-cairo, tzdata
 Standards-Version: 4.7.0
 Rules-Requires-Root: no
 

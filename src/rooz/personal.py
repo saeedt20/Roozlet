@@ -9,7 +9,7 @@ from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from .calendar_service import MIN_YEAR, MAX_YEAR, gregorian, jalali, month_length
+from .calendar_service import MAX_YEAR, civil_day, gregorian, jalali, month_length
 
 KINDS = ("note", "birthday", "appointment", "task")
 REPEATS = ("none", "daily", "weekly", "annual")
@@ -101,6 +101,7 @@ class PersonalStore:
                     item_id TEXT NOT NULL REFERENCES items(id) ON DELETE CASCADE,
                     day TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0, delivered INTEGER NOT NULL DEFAULT 0,
                     PRIMARY KEY(item_id, day))""")
+                self.connection.execute("CREATE INDEX IF NOT EXISTS occurrences_day ON occurrences(day)")
                 self.connection.execute("PRAGMA user_version = 1")
             self.items()  # Validate existing rows before exposing or changing personal data.
         except (sqlite3.Error, OSError, ValueError, KeyError) as error:
@@ -193,8 +194,14 @@ class PersonalStore:
             raise PersonalError("Personal data could not be saved") from error
 
     def on(self, day):
-        year = jalali(day).year
-        return [Occurrence(i, day, *self.state(i["id"], day)) for i in self.items()
+        jalali(day)
+        try:
+            states = {row["item_id"]: (bool(row["done"]), bool(row["delivered"]))
+                      for row in self.connection.execute(
+                          "SELECT item_id,done,delivered FROM occurrences WHERE day=?", (day.isoformat(),))}
+        except sqlite3.Error as error:
+            raise PersonalError("Personal data could not be read") from error
+        return [Occurrence(i, day, *states.get(i["id"], (False, False))) for i in self.items()
                 if occurs_on(i, day)]
 
     def entries(self, today, mode="upcoming"):
@@ -219,7 +226,8 @@ class PersonalStore:
                         result.append(Occurrence(item, day, *state))
                         break
                 continue
-            years = range(year, min(MAX_YEAR, year + 1) + 1) if item["repeat"] == "annual" and mode != "all" else (jalali(date.fromisoformat(item["day"])).year,)
+            anchor_year = jalali(date.fromisoformat(item["day"])).year
+            years = range(max(year, anchor_year), MAX_YEAR + 1) if item["repeat"] == "annual" and mode != "all" else (anchor_year,)
             for y in years:
                 day = occurrence_day(item, y)
                 if day is None:
@@ -233,16 +241,20 @@ class PersonalStore:
     def due(self, now, zone):
         if now.tzinfo is None:
             raise PersonalError("An aware time is required")
-        local_day = now.astimezone(ZoneInfo(zone)).date() if zone != "system" else now.astimezone().date()
+        now = now.astimezone(timezone.utc)
+        local_day = civil_day(zone, now)
+        first_day = civil_day(zone, now - timedelta(hours=24))
         result = []
-        for day in (local_day - timedelta(days=1), local_day):
+        for offset in range((local_day - first_day).days + 1):
+            day = first_day + timedelta(days=offset)
             try:
-                occurrences = self.on(day)
+                jalali(day)
             except ValueError:
                 continue
+            occurrences = self.on(day)
             for o in occurrences:
                 if o.item["notify"] and not o.done and not o.delivered:
-                    age = now.astimezone(timezone.utc) - wall_instant(day, o.item["time"], zone)
+                    age = now - wall_instant(day, o.item["time"], zone)
                     if timedelta(0) <= age <= timedelta(hours=24):
                         result.append(o)
         return sorted(result, key=lambda o: (o.day, o.item["time"]))

@@ -37,6 +37,11 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.sidebar.get_style_context().add_class("sidebar")
         self.sidebar.set_size_request(156, -1)
         self.sidebar.set_no_show_all(True)
+        self.sidebar_scroll = Gtk.ScrolledWindow()
+        self.sidebar_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.sidebar_scroll.set_overlay_scrolling(False)
+        self.sidebar_scroll.set_no_show_all(True)
+        self.sidebar_scroll.add(self.sidebar)
         self.shell = Gtk.Box(spacing=4)
         self.shell.set_direction(Gtk.TextDirection.LTR)
         self.page_stack = Gtk.Stack()
@@ -46,7 +51,7 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.page_stack.add_named(self.outer, "calendar")
         self.panes = {}
         self.shell.pack_start(self.page_stack, True, True, 0)
-        self.shell.pack_start(self.sidebar, False, False, 0)
+        self.shell.pack_start(self.sidebar_scroll, False, False, 0)
         self.add(self.shell)
         self.header_bar = Gtk.HeaderBar(show_close_button=True)
         self.set_titlebar(self.header_bar)
@@ -77,7 +82,8 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.show_all()
 
     def responsive(self, _, allocation):
-        wide = allocation.width >= 660
+        wide = self.shell.get_allocated_width() >= 660
+        self.sidebar_scroll.set_visible(wide)
         self.sidebar.set_visible(wide)
         self.compact_menu.set_visible(not wide)
         if hasattr(self, "header_row"):
@@ -307,7 +313,7 @@ class CalendarWindow(Gtk.ApplicationWindow):
         self.search_button.set_tooltip_text(loc.t("search") + " · Ctrl+F")
         self.search_button.get_accessible().set_name(loc.t("search"))
         self.shell.set_direction(Gtk.TextDirection.LTR)
-        self.shell.reorder_child(self.sidebar, 1 if rtl else 0)
+        self.shell.reorder_child(self.sidebar_scroll, 1 if rtl else 0)
         clear(self.sidebar)
         self.sidebar.pack_start(brand("روزلت" if rtl else "Roozlet", rtl), False, False, 10)
         self.nav_items = {}

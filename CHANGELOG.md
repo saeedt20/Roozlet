@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.2 — 2026-10-28
+
+- Archive only tracked release files; exclude symbolic links and private database files.
+- Ignore malformed annual imports while keeping bundled calendar data available.
+- Report reminder storage failures, recover alerts across daylight-saving changes, and retain future annual entries in Upcoming.
+- Read personal occurrence states once per day instead of once per entry.
+- Measure usable content width for compact navigation, scroll navigation and search help on short screens, and synchronize retained Settings controls.
+- Update desktop and extracted-package checks for current branding, card size and embedded navigation.
+
 ## 0.4.0 — 2026-10-12
 
 - Offline Shamsi/Gregorian date, bilingual occasion and personal-entry search with digit/letter normalization and direct month jumps.

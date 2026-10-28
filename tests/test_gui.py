@@ -547,6 +547,25 @@ class GuiTests(unittest.TestCase):
         self.assertLessEqual(calendar.get_size().width, area.width)
         self.assertLessEqual(settings.get_size().width, area.width)
 
+    def test_retained_settings_sync_external_preferences_without_rebuilding_controls(self):
+        calendar = self.window(CalendarWindow)
+        calendar.show_view("settings")
+        pane = calendar.panes["settings"]
+        pane.show_page("desktop")
+        lock = pane.controls["window", "locked"]
+        calendar.show_view("calendar")
+        self.app.cfg["window"].update(locked=True, always_on_top=True)
+        self.app.cfg["appearance"]["widget_scale"] = 1.2
+        self.app.cfg["events"]["visible_categories"] = []
+        calendar.apply()
+        calendar.show_view("settings")
+        self.assertIs(lock, pane.controls["window", "locked"])
+        self.assertTrue(lock.get_active())
+        self.assertTrue(pane.controls["window", "always_on_top"].get_active())
+        self.assertEqual(1.2, pane.controls["appearance", "widget_scale"].get_value())
+        self.assertFalse(pane.category_switches["national"].get_active())
+        self.assertEqual("desktop", pane.page)
+
     def test_missing_artwork_uses_readable_plain_surface(self):
         from unittest.mock import patch
         self.app.cfg["appearance"]["theme"] = "light"

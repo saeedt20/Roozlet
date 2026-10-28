@@ -1,5 +1,8 @@
 # Roozlet · روزلت
 
+نسخهٔ **۰٫۴٫۲** خطاهای ورود تقویم، یادآورها و نمایش در پنجره‌های کوچک را برطرف می‌کند.
+[فهرست تغییرات](docs/releases/v0.4.2.md) و [بستهٔ نصب](https://github.com/saeedt20/Roozlet/releases/tag/v0.4.2) در دسترس‌اند.
+
 روزلت یک تقویم آفلاین و کوچک برای Linux Mint 22.3 Xfce است. کارت پیش‌فرض
 ۳۲۰ × ۲۳۶ پیکسل منطقی، تاریخ شمسی، میلادی و قمری رسمی ایران را نمایش می‌دهد.
 با دوبار کلیک، پنجرهٔ ماهانه با مناسبت‌ها و تعطیلات باز می‌شود.
@@ -99,9 +102,9 @@
 بارگیری کنید و فرمان زیر را در پوشهٔ فایل بارگیری‌شده اجرا کنید.
 
 ```sh
-install -m 644 ./roozlet_0.4.1-1_all.deb /tmp/roozlet_0.4.1-1_all.deb
+install -m 644 ./roozlet_0.4.2-1_all.deb /tmp/roozlet_0.4.2-1_all.deb
 rooz --quit
-sudo apt install /tmp/roozlet_0.4.1-1_all.deb
+sudo apt install /tmp/roozlet_0.4.2-1_all.deb
 rooz
 rooz --settings
 rooz --calendar

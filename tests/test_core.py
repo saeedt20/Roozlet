@@ -1,4 +1,4 @@
-import copy, json, os, subprocess, sys, tempfile, unittest
+import copy, json, os, shutil, subprocess, sys, tarfile, tempfile, unittest
 from pathlib import Path
 from datetime import date, datetime, timedelta, timezone
 from unittest.mock import patch
@@ -233,6 +233,29 @@ class EventTests(unittest.TestCase):
             self.assertFalse(r.known(date(2027, 3, 21)))
             self.assertIsNone(r.hijri(date(2027, 3, 21)))
 
+    def test_malformed_nested_records_leave_bundled_data_available(self):
+        edits = (
+            lambda d: d.update(sources=[None]),
+            lambda d: d.update(days=[None]),
+            lambda d: d.update(events=[None]),
+            lambda d: d.update(coverage=[]),
+            lambda d: d.update(sources={}),
+            lambda d: d["events"][0].update(title=None),
+            lambda d: d["events"][0].update(categories=[[]]),
+            lambda d: d["events"][0].update(source_id=[]),
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            for edit in edits:
+                with self.subTest(edit=edit):
+                    obj = copy.deepcopy(self.data)
+                    edit(obj)
+                    with self.assertRaises(ValueError):
+                        validate_data(obj)
+                    (Path(tmp) / "bad.json").write_text(json.dumps(obj))
+                    repo = Repository(user=tmp)
+                    self.assertTrue(repo.errors)
+                    self.assertTrue(repo.known(date(2026, 3, 21)))
+
 
 class SettingsTests(unittest.TestCase):
     def test_atomic_save_and_bad_config_backup(self):
@@ -339,6 +362,34 @@ class LocalizationTests(unittest.TestCase):
         )
         self.assertEqual(1, result.returncode)
         self.assertIn("graphical display", result.stderr)
+
+
+class SourceArchiveTests(unittest.TestCase):
+    def test_only_tracked_release_files_are_archived_without_following_links(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "checkout"
+            (root / "scripts").mkdir(parents=True)
+            (root / "src/rooz").mkdir(parents=True)
+            shutil.copyfile(ROOT / "scripts/source-archive.py", root / "scripts/source-archive.py")
+            (root / "src/rooz/__init__.py").write_text('__version__ = "0.0.0"\n')
+            (root / "README.md").write_text("Tracked release text")
+            (root / "private.sqlite3").write_text("Synthetic private database")
+            outside = Path(tmp) / "outside.txt"
+            outside.write_text("Synthetic private text")
+            (root / "link.txt").symlink_to(outside)
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            subprocess.run(["git", "add", "."], cwd=root, check=True)
+            (root / ".env").write_text("SYNTHETIC_TOKEN=not-a-secret")
+            (root / "debug.log").write_text("Synthetic private note")
+            command = [sys.executable, str(root / "scripts/source-archive.py")]
+            subprocess.run(command, check=True, capture_output=True)
+            target = root / "dist/roozlet-0.0.0-source.tar.gz"
+            first = target.read_bytes()
+            subprocess.run(command, check=True, capture_output=True)
+            self.assertEqual(first, target.read_bytes())
+            with tarfile.open(target) as archive:
+                self.assertEqual({"roozlet-0.0.0/README.md", "roozlet-0.0.0/scripts/source-archive.py",
+                                  "roozlet-0.0.0/src/rooz/__init__.py"}, set(archive.getnames()))
 
 
 if __name__ == "__main__":

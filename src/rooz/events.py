@@ -21,6 +21,11 @@ def validate(data):
         raise ValueError("Invalid year")
     if not isinstance(data.get("data_version"), str) or not data["data_version"]:
         raise ValueError("Missing data version")
+    for key in ("sources", "days", "events"):
+        if not isinstance(data.get(key), list) or any(not isinstance(r, dict) for r in data[key]):
+            raise ValueError("Invalid " + key)
+    if not isinstance(data.get("coverage"), dict):
+        raise ValueError("Invalid coverage")
     for s in data["sources"]:
         if (
             not isinstance(s.get("id"), str)
@@ -84,10 +89,11 @@ def validate(data):
             raise ValueError("Event outside mapped year")
         if type(e["is_public_holiday"]) is not bool:
             raise ValueError("Holiday flag must be boolean")
-        if e["source_id"] not in sources:
+        if not isinstance(e.get("source_id"), str) or e["source_id"] not in sources:
             raise ValueError("Unknown event source")
         if (
-            not isinstance(e["title"].get("fa"), str)
+            not isinstance(e.get("title"), dict)
+            or not isinstance(e["title"].get("fa"), str)
             or not e["title"]["fa"].strip()
             or "en" not in e["title"]
             or e["title"]["en"] is not None
@@ -97,6 +103,7 @@ def validate(data):
         if (
             not isinstance(e["categories"], list)
             or not e["categories"]
+            or any(not isinstance(c, str) for c in e["categories"])
             or len(e["categories"]) != len(set(e["categories"]))
             or not set(e["categories"]) <= CATEGORIES
         ):
