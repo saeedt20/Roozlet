@@ -1,0 +1,25 @@
+name: Upload reviewed 0.4.2 assets
+on: workflow_dispatch
+permissions: {}
+jobs:
+  upload:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: saeedt20/Roozlet
+    steps:
+      - name: Verify, upload and download the reviewed release assets
+        run: |
+          test "$(gh api repos/saeedt20/Roozlet/releases/426599426 --jq .draft)" = true
+          gh run download 40682377885 --name rooz-tagged-release --dir release
+          cd release
+          sha256sum -c SHA256SUMS
+          printf '%s  %s\n' fbe4d15e50357173a8dd7204aba7b0caa5640a759c00d168957e94c3f1cff5bb roozlet_0.4.2-1_all.deb f297301f6bcb93f6bd3aa54b864551d13789cd15100421e721758bc16ed455f7 roozlet-0.4.2-source.tar.gz | sha256sum -c -
+          gh release upload v0.4.2 roozlet_0.4.2-1_all.deb roozlet-0.4.2-source.tar.gz SHA256SUMS --clobber
+          gh release download v0.4.2 --dir ../verify
+          cd ../verify
+          cmp ../release/SHA256SUMS SHA256SUMS
+          sha256sum -c SHA256SUMS
